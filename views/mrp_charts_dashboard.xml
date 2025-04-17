@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Client Action for Line Chart -->
+    <record id="action_mrp_charts_dashboard" model="ir.actions.client">
+        <field name="name">Charts Dashboard</field>
+        <field name="tag">need_mrp_dashboard.ChartsDashboard</field>
+        <field name="target">main</field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem
+        id="menu_mrp_charts_dashboard"
+        name="Charts Dashboard"
+        parent="menu_mrp_dashboard_root"
+        action="action_mrp_charts_dashboard"
+        sequence="1"/>
+</odoo>

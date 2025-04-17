@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_mrp_bom_materials">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>รายการวัสดุที่ต้องสั่งซื้อ / Materials Purchase List</h2>
+                    
+                    <!-- Summary of Manufacturing Orders -->
+                    <div class="row mt-4 mb-4">
+                        <div class="col-12">
+                            <h4>รายการผลิตที่เลือก / Selected Manufacturing Orders:</h4>
+                            <ul>
+                                <t t-foreach="docs" t-as="mo">
+                                    <li>
+                                        <span t-field="mo.name"/> - <span t-field="mo.product_id.name"/>
+                                        (<span t-field="mo.product_qty"/> <span t-field="mo.product_uom_id.name"/>)
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Pre-process and aggregate components -->
+                    <t t-set="materials" t-value="{}"/>
+                    <t t-foreach="docs" t-as="mo">
+                        <t t-foreach="mo.move_raw_ids" t-as="component">
+                            <!-- Process main components -->
+                            <t t-set="comp_key" t-value="str(component.product_id.id)"/>
+                            <t t-if="comp_key not in materials">
+                                <t t-set="materials" t-value="dict(materials, **{
+                                    comp_key: {
+                                        'product': component.product_id,
+                                        'uom': component.product_uom,
+                                        'qty': component.product_uom_qty,
+                                        'subcomponents': {}
+                                    }
+                                })"/>
+                            </t>
+                            <t t-else="">
+                                <t t-set="materials" t-value="dict(materials, **{
+                                    comp_key: dict(
+                                        materials[comp_key],
+                                        qty=materials[comp_key]['qty'] + component.product_uom_qty
+                                    )
+                                })"/>
+                            </t>
+
+                            <!-- Process subcomponents -->
+                            <t t-if="component.product_id.bom_ids">
+                                <t t-foreach="component.product_id.bom_ids[0].bom_line_ids" t-as="subcomp">
+                                    <t t-set="subcomp_key" t-value="str(subcomp.product_id.id)"/>
+                                    <t t-set="subcomp_qty" t-value="subcomp.product_qty * component.product_uom_qty"/>
+                                    
+                                    <!-- Add subcomponent to main materials if not exists -->
+                                    <t t-if="subcomp_key not in materials">
+                                        <t t-set="materials" t-value="dict(materials, **{
+                                            subcomp_key: {
+                                                'product': subcomp.product_id,
+                                                'uom': subcomp.product_uom_id,
+                                                'qty': subcomp_qty,
+                                                'subcomponents': {},
+                                                'is_subcomponent': True,
+                                                'parent_components': [comp_key]
+                                            }
+                                        })"/>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-set="materials" t-value="dict(materials, **{
+                                            subcomp_key: dict(
+                                                materials[subcomp_key],
+                                                qty=materials[subcomp_key]['qty'] + subcomp_qty,
+                                                parent_components=materials[subcomp_key].get('parent_components', []) + [comp_key] if comp_key not in materials[subcomp_key].get('parent_components', []) else materials[subcomp_key].get('parent_components', [])
+                                            )
+                                        })"/>
+                                    </t>
+                                </t>
+                            </t>
+                        </t>
+                    </t>
+
+                    <!-- Display results -->
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>รหัสสินค้า / Code</th>
+                                <th>ส่วนประกอบ / Component</th>
+                                <th class="text-right">จำนวนรวม / Total Quantity</th>
+                                <th>หน่วย / Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Show main components first -->
+                            <t t-foreach="materials.values()" t-as="component">
+                                <t t-if="not component.get('is_subcomponent', False)">
+                                    <tr>
+                                        <td><span t-field="component['product'].default_code"/></td>
+                                        <td>
+                                            <span t-field="component['product'].name"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'%.3f' % component['qty']"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="component['uom'].name"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                            
+                            <!-- Show subcomponents -->
+                            <t t-foreach="materials.values()" t-as="component">
+                                <t t-if="component.get('is_subcomponent', False)">
+                                    <tr>
+                                        <td><span t-field="component['product'].default_code"/></td>
+                                        <td>
+                                            <span style="margin-left: 20px;">↳ </span>
+                                            <span t-field="component['product'].name"/>
+                                            <small class="text-muted">
+                                                (จาก: <t t-foreach="component.get('parent_components', [])" t-as="parent_id">
+                                                    <span t-field="materials[parent_id]['product'].name"/><t t-if="not parent_id_last">, </t>
+                                                </t>)
+                                            </small>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'%.3f' % component['qty']"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="component['uom'].name"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- Footer note -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <p class="text-muted">
+                                หมายเหตุ: รายการนี้แสดงจำนวนรวมของวัสดุที่ต้องใช้ในการผลิตทั้งหมด / 
+                                Note: This list shows the total quantities of materials needed for all selected manufacturing orders.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_mrp_bom_materials" model="ir.actions.report">
+        <field name="name">รายการวัสดุที่ต้องสั่งซื้อ / Materials Purchase List</field>
+        <field name="model">mrp.production</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">need_mrp_dashboard.report_mrp_bom_materials</field>
+        <field name="report_file">need_mrp_dashboard.report_mrp_bom_materials</field>
+        <field name="binding_model_id" ref="mrp.model_mrp_production"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo> 

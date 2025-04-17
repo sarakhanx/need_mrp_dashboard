@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mrp_operation_dashboard_kanban_view" model="ir.ui.view">
+        <field name="name">mrp.operation.dashboard.kanban</field>
+        <field name="model">mrp.operation.dashboard</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard o_emphasize_colors" create="1" group_create="false">
+                <field name="color"/>
+                <field name="name"/>
+                <field name="operation_type_id"/>
+                <field name="warehouse_id"/>
+                <field name="count_todo"/>
+                <field name="count_waiting"/>
+                <field name="count_late"/>
+                <field name="count_in_progress"/>
+                <templates>
+                    <t t-name="kanban-menu">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-6 o_kanban_card_manage_section o_kanban_manage_view">
+                                    <h5 role="menuitem" class="o_kanban_card_manage_title">
+                                        <span>การดำเนินการ</span>
+                                    </h5>
+                                    <div role="menuitem">
+                                        <a name="get_operation_action" type="object">ทั้งหมด</a>
+                                    </div>
+                                    <div role="menuitem">
+                                        <a name="get_action_todo" type="object">รายการคำสั่งดำเนินการพร้อมทำการ</a>
+                                    </div>
+                                    <div role="menuitem">
+                                        <a name="get_action_waiting" type="object">รายการสั่งผลิตแล้ว</a>
+                                    </div>
+                                    <div role="menuitem">
+                                        <a name="get_action_in_progress" type="object">กำลังดำเนินการ</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div t-if="widget.editable" class="o_kanban_card_manage_settings row">
+                                <div class="col-8" role="menuitem" aria-haspopup="true">
+                                    <ul class="oe_kanban_colorpicker" data-field="color" role="menu"/>
+                                </div>
+                                <div role="menuitem" class="col-4">
+                                    <a class="dropdown-item" role="menuitem" type="edit">การตั้งค่าการ์ด</a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        <a type="object" name="get_operation_action">
+                                            <field name="name"/>
+                                        </a>
+                                    </div>
+                                    <div class="o_secondary">
+                                        <field name="warehouse_id"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-6 o_kanban_primary_left">
+                                        <button class="btn btn-warning mt-2" name="get_action_in_progress" type="object">
+                                            <span><t t-esc="record.count_in_progress.value"/> กำลังดำเนินการ</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div t-if="record.count_waiting.raw_value > 0" class="row">
+                                            <div class="col-12">
+                                                <a name="get_action_waiting" type="object">
+                                                    <field name="count_waiting"/>
+                                                    รายการสั่งผลิตแล้ว
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div t-if="record.count_late.raw_value > 0" class="row">
+                                            <div class="col-12">
+                                                <a name="get_action_late" type="object">
+                                                    <field name="count_late"/>
+                                                    ล่าช้า
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="mrp_operation_dashboard_form_view" model="ir.ui.view">
+        <field name="name">mrp.operation.dashboard.form</field>
+        <field name="model">mrp.operation.dashboard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="operation_type_id"/>
+                        <field name="warehouse_id"/>
+                        <field name="color" widget="color_picker"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mrp_operation_dashboard" model="ir.actions.act_window">
+        <field name="name">สรุปการดำเนินการ</field>
+        <field name="res_model">mrp.operation.dashboard</field>
+        <field name="view_mode">kanban,form</field>
+    </record>
+
+    <menuitem id="menu_mrp_operation_dashboard"
+        name="สรุปการดำเนินการ"
+        parent="menu_mrp_dashboard_root"
+        action="action_mrp_operation_dashboard"
+        sequence="3"/>
+</odoo> 

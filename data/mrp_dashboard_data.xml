@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Manufacturing Dashboard Default Data -->
+        <record id="mrp_dashboard_all" model="mrp.dashboard">
+            <field name="name">All Manufacturing</field>
+            <field name="color">1</field>
+        </record>
+
+        <record id="mrp_dashboard_wip" model="mrp.dashboard">
+            <field name="name">Work In Progress</field>
+            <field name="color">2</field>
+        </record>
+
+        <record id="mrp_dashboard_waiting" model="mrp.dashboard">
+            <field name="name">Waiting for Materials</field>
+            <field name="color">3</field>
+        </record>
+
+        <record id="mrp_dashboard_done" model="mrp.dashboard">
+            <field name="name">Completed Today</field>
+            <field name="color">4</field>
+        </record>
+
+        <!-- Operation Type Dashboard Default Data -->
+        <function model="mrp.operation.dashboard" name="_init_dashboard_data"/>
+    </data>
+</odoo>

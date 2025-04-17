@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mrp_dashboard_user,mrp.dashboard.user,model_mrp_dashboard,mrp.group_mrp_user,1,0,0,0
+access_mrp_dashboard_manager,mrp.dashboard.manager,model_mrp_dashboard,mrp.group_mrp_manager,1,1,1,1
+access_mrp_operation_dashboard_user,mrp.operation.dashboard.user,model_mrp_operation_dashboard,mrp.group_mrp_user,1,0,0,0
+access_mrp_operation_dashboard_manager,mrp.operation.dashboard.manager,model_mrp_operation_dashboard,mrp.group_mrp_manager,1,1,1,1
+access_mrp_workorder_dashboard_user,mrp.workorder.dashboard.user,model_mrp_workorder_dashboard,mrp.group_mrp_user,1,0,0,0
+access_mrp_workorder_dashboard_manager,mrp.workorder.dashboard.manager,model_mrp_workorder_dashboard,mrp.group_mrp_manager,1,1,1,1
+access_custom_mo_dashboard_user,custom.mo.dashboard.user,model_custom_mo_dashboard,mrp.group_mrp_user,1,1,1,1
+access_custom_mo_dashboard_manager,custom.mo.dashboard.manager,model_custom_mo_dashboard,mrp.group_mrp_manager,1,1,1,1

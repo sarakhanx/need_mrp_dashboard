@@ -1,0 +1,35 @@
+{
+    'name': 'MRP Dashboard',
+    'version': '17.0.1.0.0',
+    'category': 'Manufacturing',
+    'summary': 'Dashboard for Manufacturing Operations',
+    'description': """
+        This module adds a dashboard view to the Manufacturing (MRP) module,
+        providing an overview of manufacturing operations similar to the inventory dashboard.
+    """,
+    'depends': ['mrp', 'web', 'base'],
+    'data': [
+        'security/mrp_security.xml',
+        'security/ir.model.access.csv', 
+        'data/mrp_dashboard_data.xml',
+        'views/mrp_dashboard_views.xml',
+        'views/mrp_operation_dashboard_views.xml',
+        'views/mrp_workorder_dashboard_views.xml',
+        'views/mrp_charts_dashboard.xml',
+        'report/mrp_bom_materials_report.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            # XML templates
+            'need_mrp_dashboard/static/src/xml/chart_templates.xml',
+            
+            # Custom JS files
+            'need_mrp_dashboard/static/src/js/charts.js',
+        ],
+    },
+
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+    'license': 'LGPL-3',
+} 
