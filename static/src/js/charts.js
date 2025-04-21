@@ -465,3 +465,9 @@ export class ChartsDashboard extends Component {
 
 // Register the client action directly
 registry.category("actions").add("need_mrp_dashboard.ChartsDashboard", ChartsDashboard);
+
+// Also register as a client action with a specific ID
+registry.category("client_actions").add("need_mrp_dashboard.ChartsDashboard", {
+    id: "need_mrp_dashboard.ChartsDashboard",
+    component: ChartsDashboard,
+});

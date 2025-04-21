@@ -84,9 +84,10 @@
         </field>
     </record>
 
-    <record id="action_mrp_dashboard" model="ir.actions.client">
-        <field name="name">Manufacturing Dashboard</field>
-        <field name="tag">need_mrp_dashboard.ChartsDashboard</field>
+    <record id="action_mrp_dashboard_window" model="ir.actions.act_window">
+        <field name="name">Manufacturing Summary</field>
+        <field name="res_model">mrp.dashboard</field>
+        <field name="view_mode">kanban</field>
     </record>
 
     <!-- Parent Menu: Dashboard -->
@@ -99,6 +100,6 @@
     <menuitem id="menu_mrp_dashboard"
         name="สรุปการผลิตทั้งหมด"
         parent="menu_mrp_dashboard_root"
-        action="action_mrp_dashboard"
-        sequence="3"/>
+        action="action_mrp_dashboard_window"
+        sequence="2"/>
 </odoo> 
