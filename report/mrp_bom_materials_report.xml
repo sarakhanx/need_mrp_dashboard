@@ -21,72 +21,16 @@
                         </div>
                     </div>
 
-                    <!-- Pre-process and aggregate components -->
-                    <t t-set="materials" t-value="{}"/>
-                    <t t-foreach="docs" t-as="mo">
-                        <t t-foreach="mo.move_raw_ids" t-as="component">
-                            <!-- Process main components -->
-                            <t t-set="comp_key" t-value="str(component.product_id.id)"/>
-                            <t t-if="comp_key not in materials">
-                                <t t-set="materials" t-value="dict(materials, **{
-                                    comp_key: {
-                                        'product': component.product_id,
-                                        'uom': component.product_uom,
-                                        'qty': component.product_uom_qty,
-                                        'subcomponents': {}
-                                    }
-                                })"/>
-                            </t>
-                            <t t-else="">
-                                <t t-set="materials" t-value="dict(materials, **{
-                                    comp_key: dict(
-                                        materials[comp_key],
-                                        qty=materials[comp_key]['qty'] + component.product_uom_qty
-                                    )
-                                })"/>
-                            </t>
-
-                            <!-- Process subcomponents -->
-                            <t t-if="component.product_id.bom_ids">
-                                <t t-foreach="component.product_id.bom_ids[0].bom_line_ids" t-as="subcomp">
-                                    <t t-set="subcomp_key" t-value="str(subcomp.product_id.id)"/>
-                                    <t t-set="subcomp_qty" t-value="subcomp.product_qty * component.product_uom_qty"/>
-                                    
-                                    <!-- Add subcomponent to main materials if not exists -->
-                                    <t t-if="subcomp_key not in materials">
-                                        <t t-set="materials" t-value="dict(materials, **{
-                                            subcomp_key: {
-                                                'product': subcomp.product_id,
-                                                'uom': subcomp.product_uom_id,
-                                                'qty': subcomp_qty,
-                                                'subcomponents': {},
-                                                'is_subcomponent': True,
-                                                'parent_components': [comp_key]
-                                            }
-                                        })"/>
-                                    </t>
-                                    <t t-else="">
-                                        <t t-set="materials" t-value="dict(materials, **{
-                                            subcomp_key: dict(
-                                                materials[subcomp_key],
-                                                qty=materials[subcomp_key]['qty'] + subcomp_qty,
-                                                parent_components=materials[subcomp_key].get('parent_components', []) + [comp_key] if comp_key not in materials[subcomp_key].get('parent_components', []) else materials[subcomp_key].get('parent_components', [])
-                                            )
-                                        })"/>
-                                    </t>
-                                </t>
-                            </t>
-                        </t>
-                    </t>
-
                     <!-- Display results -->
                     <table class="table table-sm">
                         <thead>
                             <tr>
                                 <th>รหัสสินค้า / Code</th>
                                 <th>ส่วนประกอบ / Component</th>
-                                <th class="text-right">จำนวนรวม / Total Quantity</th>
-                                <th>หน่วย / Unit</th>
+                                <th class="text-right">จำนวนที่ต้องการ</th>
+                                <th class="text-right">จำนวนที่จองแล้ว</th>
+                                <th class="text-right">จำนวนที่ยังขาด</th>
+                                <th>หน่วยนับ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,6 +44,12 @@
                                         </td>
                                         <td class="text-right">
                                             <span t-esc="'%.3f' % component['qty']"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'%.3f' % component.get('reserved_qty', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'%.3f' % (component.get('qty', 0.0) - component.get('reserved_qty', 0.0))"/>
                                         </td>
                                         <td>
                                             <span t-field="component['uom'].name"/>
@@ -118,12 +68,18 @@
                                             <span t-field="component['product'].name"/>
                                             <small class="text-muted">
                                                 (จาก: <t t-foreach="component.get('parent_components', [])" t-as="parent_id">
-                                                    <span t-field="materials[parent_id]['product'].name"/><t t-if="not parent_id_last">, </t>
+                                                    <span t-if="materials.get(parent_id)" t-field="materials[parent_id]['product'].name"/><t t-if="not parent_id_last">, </t>
                                                 </t>)
                                             </small>
                                         </td>
                                         <td class="text-right">
                                             <span t-esc="'%.3f' % component['qty']"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'%.3f' % component.get('reserved_qty', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="'%.3f' % (component.get('qty', 0.0) - component.get('reserved_qty', 0.0))"/>
                                         </td>
                                         <td>
                                             <span t-field="component['uom'].name"/>
