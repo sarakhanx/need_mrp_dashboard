@@ -51,7 +51,7 @@
                                     <td><t t-esc="formatDate(mo.date_start)"/></td>
                                     <td><t t-esc="formatDate(mo.date_finished)"/></td>
                                     <td>
-                                        <span t-attf-class="badge {{ getStatusClass(mo.state) }}">
+                                        <span t-attf-class="badge status-badge {{ getStatusClass(mo.state) }}">
                                             <t t-esc="getStatusText(mo.state)"/>
                                         </span>
                                     </td>
@@ -107,7 +107,7 @@
                                     <td><t t-esc="doc.product_uom_id[1]"/></td>
                                     <td><t t-esc="doc.warehouse_id[1]"/></td>
                                     <td>
-                                        <span t-attf-class="badge {{ getStatusClass(doc.state) }}">
+                                        <span t-attf-class="badge status-badge {{ getStatusClass(doc.state) }}">
                                             <t t-esc="getStatusText(doc.state)"/>
                                         </span>
                                     </td>

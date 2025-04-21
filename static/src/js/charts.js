@@ -15,6 +15,17 @@ export class ChartsDashboard extends Component {
         this.dialog = useService("dialog");
         this.action = useService("action");
 
+        // Add custom CSS for status badges
+        const style = document.createElement('style');
+        style.textContent = `
+            .status-badge.bg-secondary { background-color: #6c757d !important; }
+            .status-badge.bg-primary { background-color: #0d6efd !important; }
+            .status-badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+            .status-badge.bg-success { background-color: #198754 !important; }
+            .status-badge.bg-danger { background-color: #dc3545 !important; }
+        `;
+        document.head.appendChild(style);
+
         // Initialize with today's date
         const today = new Date();
         const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
