@@ -64,10 +64,10 @@
                                     <tr>
                                         <td><span t-field="component['product'].default_code"/></td>
                                         <td>
-                                            <span style="margin-left: 20px;">↳ </span>
+                                            <span style="margin-left: 20px;"> → </span>
                                             <span t-field="component['product'].name"/>
                                             <small class="text-muted">
-                                                (จาก: <t t-foreach="component.get('parent_components', [])" t-as="parent_id">
+                                                (จาก: <t t-foreach="component.get('parents', [])" t-as="parent_id">
                                                     <span t-if="materials.get(parent_id)" t-field="materials[parent_id]['product'].name"/><t t-if="not parent_id_last">, </t>
                                                 </t>)
                                             </small>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_mo_worksheet" model="ir.actions.report">
+        <field name="name">MO Worksheet</field>
+        <field name="model">mrp.production</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">need_mrp_dashboard.report_mo_worksheet_template</field>
+        <field name="report_file">need_mrp_dashboard.report_mo_worksheet_template</field>
+        <field name="print_report_name">(object.name or 'MO_Worksheet').replace('/','_') + '_Worksheet'</field>
+        <field name="binding_model_id" ref="mrp.model_mrp_production"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo> 

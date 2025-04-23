@@ -17,6 +17,8 @@
         'views/mrp_workorder_dashboard_views.xml',
         'views/mrp_charts_dashboard.xml',
         'report/mrp_bom_materials_report.xml',
+        'report/mo_worksheet_report.xml',
+        'report/mo_worksheet_template.xml',
     ],
     'assets': {
         'web.assets_backend': [
@@ -25,6 +27,9 @@
             
             # Custom JS files
             'need_mrp_dashboard/static/src/js/charts.js',
+        ],
+        'web.report_assets_common': [
+            'need_mrp_dashboard/static/src/css/report_styles.css',
         ],
     },
 

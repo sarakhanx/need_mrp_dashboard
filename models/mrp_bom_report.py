@@ -47,17 +47,18 @@ class MrpBomReport(models.AbstractModel):
             materials_dict[comp_key] = {
                 'product': product,
                 'uom': uom,
-                'qty': 0.0,
+                'qty': required_qty,
                 'reserved_qty': 0.0,
                 'level': level,
-                'parents': set(),
-                'required_by_mo': {}
+                'parents': set([parent_key]) if parent_key else set(),
+                'required_by_mo': {current_mo.id: {'req': required_qty, 'res': 0.0}},
+                'is_subcomponent': level > 0
             }
-
-        materials_dict[comp_key]['qty'] += required_qty
-        materials_dict[comp_key]['level'] = min(materials_dict[comp_key]['level'], level)
-        if parent_key:
-            materials_dict[comp_key]['parents'].add(parent_key)
+        else:
+            materials_dict[comp_key]['qty'] += required_qty
+            materials_dict[comp_key]['level'] = min(materials_dict[comp_key]['level'], level)
+            if parent_key:
+                materials_dict[comp_key]['parents'].add(parent_key)
 
         # --- Store MO-specific requirement and reservation data ---
         mo_id_key = current_mo.id
@@ -82,8 +83,9 @@ class MrpBomReport(models.AbstractModel):
 
         # --- Check for MTO / Sub-MO (Using Origin Field Primarily) ---
         sub_mo_found = None
-        # Only check if this component is a direct raw material for the *current* MO and is manufacturable
-        if is_top_level_of_context_mo and product.mrp_product_qty > 0:
+        _logger.debug(f"DEBUG: Before Sub-MO check for {product.display_name} (L{level})")
+        if is_top_level_of_context_mo:
+             _logger.debug(f"DEBUG: INSIDE Sub-MO check for {product.display_name} (L{level})")
              _logger.debug(f"{'  ' * level}  Checking for Sub-MO for MTO component: {product.name} (ID: {product.id}) requested by MO: {current_mo.name}")
              # --- Primary Method: Search using Origin --- 
              # Origin field usually contains the name/reference of the MO that triggered this MTO
@@ -235,6 +237,13 @@ class MrpBomReport(models.AbstractModel):
             data_val['parents'] = list(data_val.get('parents', set()))
 
         _logger.info(f"Final materials data for report: {materials}")
+
+        # --- TEMPORARY TEST ---
+        # if '503' in materials: # Assuming 503 is โครงเหล็ก
+        #     materials['503']['reserved_qty'] = 99.99
+        #     _logger.warning("TEMPORARY TEST: Hardcoded reserved_qty for product 503 to 99.99")
+        # --- END TEMPORARY TEST ---
+
         return {
             'doc_ids': docids,
             'doc_model': 'mrp.production',
