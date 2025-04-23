@@ -105,7 +105,7 @@
     </template>
 
     <record id="action_report_mrp_bom_materials" model="ir.actions.report">
-        <field name="name">รายการวัสดุที่ต้องสั่งซื้อ / Materials Purchase List</field>
+        <field name="name">รายการวัสดุที่ต้องสั่งซื้อ</field>
         <field name="model">mrp.production</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">need_mrp_dashboard.report_mrp_bom_materials</field>

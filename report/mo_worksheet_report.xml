@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_report_mo_worksheet" model="ir.actions.report">
-        <field name="name">MO Worksheet</field>
+        <field name="name">ใบเบิกสินค้าจากสโตร์</field>
         <field name="model">mrp.production</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">need_mrp_dashboard.report_mo_worksheet_template</field>
