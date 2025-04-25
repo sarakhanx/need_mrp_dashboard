@@ -4,22 +4,33 @@
         <!-- Manufacturing Dashboard Default Data -->
         <record id="mrp_dashboard_all" model="mrp.dashboard">
             <field name="name">All Manufacturing</field>
+            <field name="card_type">overview</field>
             <field name="color">1</field>
         </record>
 
         <record id="mrp_dashboard_wip" model="mrp.dashboard">
             <field name="name">Work In Progress</field>
+            <field name="card_type">overview</field>
             <field name="color">2</field>
         </record>
 
         <record id="mrp_dashboard_waiting" model="mrp.dashboard">
             <field name="name">Waiting for Materials</field>
+            <field name="card_type">overview</field>
             <field name="color">3</field>
         </record>
 
         <record id="mrp_dashboard_done" model="mrp.dashboard">
             <field name="name">Completed Today</field>
+            <field name="card_type">overview</field>
             <field name="color">4</field>
+        </record>
+
+        <!-- New Card for Lots/Serial Numbers -->
+        <record id="mrp_dashboard_lots" model="mrp.dashboard">
+            <field name="name">Lots/Serial Numbers</field>
+            <field name="card_type">lots</field>
+            <field name="color">5</field>
         </record>
 
         <!-- Operation Type Dashboard Default Data -->

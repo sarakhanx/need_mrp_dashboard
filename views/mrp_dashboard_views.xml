@@ -7,6 +7,7 @@
             <kanban class="o_kanban_dashboard o_emphasize_colors" create="0" group_create="false">
                 <field name="color"/>
                 <field name="name"/>
+                <field name="card_type"/>
                 <field name="count_mo_ready"/>
                 <field name="count_mo_waiting"/>
                 <field name="count_mo_late"/>
@@ -40,43 +41,63 @@
                     </t>
                     <t t-name="kanban-box">
                         <div t-attf-class="#{kanban_color(record.color.raw_value)}">
-                            <div class="o_kanban_card_header">
-                                <div class="o_kanban_card_header_title">
-                                    <div class="o_primary">
-                                        <a type="object" name="get_mo_action">
-                                            <field name="name"/>
-                                        </a>
+                            <t t-if="record.card_type.raw_value == 'overview'">
+                                <div class="o_kanban_card_header">
+                                    <div class="o_kanban_card_header_title">
+                                        <div class="o_primary">
+                                            <a type="object" name="get_mo_action">
+                                                <field name="name"/>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="container o_kanban_card_content">
-                                <div class="row">
-                                    <div class="col-6 o_kanban_primary_left">
-                                        <button class="btn btn-primary" name="get_action_mo_in_progress" type="object">
-                                            <span><t t-esc="record.count_mo_in_progress.value"/> กำลังดำเนินการ</span>
-                                        </button>
-                                    </div>
-                                    <div class="col-6 o_kanban_primary_right">
-                                        <div t-if="record.count_mo_waiting.raw_value > 0" class="row">
-                                            <div class="col-12">
-                                                <a name="get_action_mo_waiting" type="object">
-                                                    <field name="count_mo_waiting"/>
-                                                    รายการสั่งผลิตแล้ว
-                                                </a>
-                                            </div>
+                                <div class="container o_kanban_card_content">
+                                    <div class="row">
+                                        <div class="col-6 o_kanban_primary_left">
+                                            <button class="btn btn-primary" name="get_action_mo_in_progress" type="object">
+                                                <span><t t-esc="record.count_mo_in_progress.value"/> กำลังดำเนินการ</span>
+                                            </button>
                                         </div>
+                                        <div class="col-6 o_kanban_primary_right">
+                                            <div t-if="record.count_mo_waiting.raw_value > 0" class="row">
+                                                <div class="col-12">
+                                                    <a name="get_action_mo_waiting" type="object">
+                                                        <field name="count_mo_waiting"/>
+                                                        รายการสั่งผลิตแล้ว
+                                                    </a>
+                                                </div>
+                                            </div>
 
-                                        <div t-if="record.count_mo_late.raw_value > 0" class="row">
-                                            <div class="col-12">
-                                                <a name="get_action_mo_late" type="object">
-                                                    <field name="count_mo_late"/>
-                                                    ล่าช้า
-                                                </a>
+                                            <div t-if="record.count_mo_late.raw_value > 0" class="row">
+                                                <div class="col-12">
+                                                    <a name="get_action_mo_late" type="object">
+                                                        <field name="count_mo_late"/>
+                                                        ล่าช้า
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </t>
+                            <t t-if="record.card_type.raw_value == 'lots'">
+                                <div class="o_kanban_card_header">
+                                    <div class="o_kanban_card_header_title">
+                                        <div class="o_primary">
+                                            <field name="name"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="container o_kanban_card_content">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <a type="action" class="btn btn-primary" name="%(need_mrp_dashboard.action_stock_lot_form_dashboard)d">
+                                                <span><i class="fa fa-list"/> ดูรายการทั้งหมด</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
                         </div>
                     </t>
                 </templates>

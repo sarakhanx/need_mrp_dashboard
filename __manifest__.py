@@ -7,11 +7,12 @@
         This module adds a dashboard view to the Manufacturing (MRP) module,
         providing an overview of manufacturing operations similar to the inventory dashboard.
     """,
-    'depends': ['mrp', 'web', 'base'],
+    'depends': ['mrp', 'web', 'base', 'stock', 'product'],
     'data': [
+        'security/ir.model.access.csv',
         'security/mrp_security.xml',
-        'security/ir.model.access.csv', 
         'data/mrp_dashboard_data.xml',
+        'views/stock_lot_actions.xml',
         'views/mrp_dashboard_views.xml',
         'views/mrp_operation_dashboard_views.xml',
         'views/mrp_workorder_dashboard_views.xml',

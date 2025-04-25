@@ -7,6 +7,10 @@ class MrpDashboard(models.Model):
 
     name = fields.Char('Name', required=True)
     color = fields.Integer('Color Index')
+    card_type = fields.Selection([
+        ('overview', 'Overview'), 
+        ('lots', 'Lots/Serial Numbers')
+        ], string='Card Type', default='overview', required=True)
     
     # Production Orders Counts
     count_mo_ready = fields.Integer(compute='_compute_mo_count', string='Ready to Produce')
