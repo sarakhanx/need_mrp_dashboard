@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from datetime import datetime, timedelta
 
 class MrpDashboard(models.Model):
@@ -11,6 +11,10 @@ class MrpDashboard(models.Model):
         ('overview', 'Overview'), 
         ('lots', 'Lots/Serial Numbers')
         ], string='Card Type', default='overview', required=True)
+    product_category_id = fields.Many2one(
+        'product.category', 
+        string='Target Product Category', 
+        help="Specify the category for the 'Lots/Serial Numbers' card type.")
     
     # Production Orders Counts
     count_mo_ready = fields.Integer(compute='_compute_mo_count', string='Ready to Produce')
@@ -170,4 +174,28 @@ class MrpDashboard(models.Model):
             'res_model': 'mrp.production',
             'view_mode': 'tree,form,kanban',
             'domain': domain,
-        } 
+        }
+
+    # Action method for the 'Lots/Serial Numbers' card type
+    def action_open_lots_for_category(self):
+        self.ensure_one()
+        action = self.env.ref('stock.action_production_lot_form').read()[0]
+
+        # Base domain: only lots with positive quantity
+        domain = [('product_qty', '>', 0)]
+
+        # Add category filter if specified on the dashboard card
+        if self.product_category_id:
+            domain.append(('product_id.categ_id', '=', self.product_category_id.id))
+            action['name'] = _('Lots/SN - %s') % self.product_category_id.display_name
+        else:
+            # Optional: Define behavior if no category is set
+            # Could show all lots, or raise an error, or filter something else
+            # For now, it will just show all lots with qty > 0
+            action['name'] = _('All Lots/SN (Qty > 0)') 
+
+        action['domain'] = domain
+        # Remove default filters from context if any were set by the original action
+        action['context'] = {}
+
+        return action 

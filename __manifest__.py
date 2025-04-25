@@ -12,7 +12,6 @@
         'security/ir.model.access.csv',
         'security/mrp_security.xml',
         'data/mrp_dashboard_data.xml',
-        'views/stock_lot_actions.xml',
         'views/mrp_dashboard_views.xml',
         'views/mrp_operation_dashboard_views.xml',
         'views/mrp_workorder_dashboard_views.xml',
