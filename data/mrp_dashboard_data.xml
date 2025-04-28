@@ -28,7 +28,7 @@
 
         <!-- Card for Lots/Serial Numbers - Configure Category Here -->
         <record id="mrp_dashboard_lots_categ7" model="mrp.dashboard">
-            <field name="name">Lots/SN - Category 7</field> <!-- Example Name -->
+            <field name="name">Lots/SN ตู้รอขาย</field> <!-- Example Name -->
             <field name="card_type">lots</field>
             <field name="product_category_id" eval="7"/> <!-- Set the actual Category ID -->
             <field name="color">5</field> 

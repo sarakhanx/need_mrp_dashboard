@@ -10,6 +10,7 @@ export class ChartsDashboard extends Component {
 
     setup() {
         this.chartRef = useRef("chart");
+        this.rootRef = useRef("root");
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
@@ -97,6 +98,18 @@ export class ChartsDashboard extends Component {
                 this.loadAndRenderChart();
                 this.loadRecentMOs();
             }, 100);
+
+            // Add event listener for the New MO button using the rootRef
+            if (this.rootRef.el) {
+                const newMoButton = this.rootRef.el.querySelector('.o_list_button_add');
+                if (newMoButton) {
+                    newMoButton.addEventListener('click', () => this._onNewMoClick());
+                } else {
+                    console.warn('New MO button (.o_list_button_add) not found within rootRef.');
+                }
+            } else {
+                console.warn('Root element (rootRef) not found in onMounted.');
+            }
         });
     }
 
@@ -471,6 +484,17 @@ export class ChartsDashboard extends Component {
 
         const docType = selectedType.code === 'mrp_operation' ? 'mrp.production' : 'stock.picking';
         await this.navigateToDocument(docType, doc.id);
+    }
+
+    // Handler for the New MO button click
+    _onNewMoClick() {
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            res_model: 'mrp.production',
+            views: [[false, 'form']],
+            target: 'current',
+            context: {},
+        });
     }
 }
 

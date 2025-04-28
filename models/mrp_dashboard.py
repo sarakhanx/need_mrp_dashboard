@@ -187,12 +187,12 @@ class MrpDashboard(models.Model):
         # Add category filter if specified on the dashboard card
         if self.product_category_id:
             domain.append(('product_id.categ_id', '=', self.product_category_id.id))
-            action['name'] = _('Lots/SN - %s') % self.product_category_id.display_name
+            action['name'] = _('SN บ้านที่ผลิตแล้ว - %s') % self.product_category_id.display_name
         else:
             # Optional: Define behavior if no category is set
             # Could show all lots, or raise an error, or filter something else
             # For now, it will just show all lots with qty > 0
-            action['name'] = _('All Lots/SN (Qty > 0)') 
+            action['name'] = _('All Lots/SN') 
 
         action['domain'] = domain
         # Remove default filters from context if any were set by the original action
