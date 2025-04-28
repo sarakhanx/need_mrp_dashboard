@@ -1,127 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="need_mrp_dashboard.ChartsDashboard" owl="1">
-        <div class="o_content d-flex flex-column h-100 bg-view" t-ref="root">
-            <!-- Header Section -->
-            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-                <!-- Date Range Selector (Left) -->
-                <div class="d-flex gap-3">
-                    <div class="form-group">
-                        <label class="form-label">Start Date</label>
-                        <input 
-                            type="date" 
-                            class="form-control" 
-                            t-model="state.startDate"
-                            t-on-change="onDateChange"/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">End Date</label>
-                        <input 
-                            type="date" 
-                            class="form-control" 
-                            t-model="state.endDate"
-                            t-on-change="onDateChange"/>
-                    </div>
-                </div>
-                <!-- New MO Button (Right) -->
-                <div>
-                    <button class="btn btn-primary o_list_button_add" type="button">
-                        <i class="fa fa-plus me-1"/> คำสั่งผลิตใหม่
-                    </button>
-                </div>
-            </div>
-            <!-- Chart Container -->
-            <div class="chart-container position-relative p-3" style="min-height: 400px;">
-                <canvas t-ref="chart" class="w-100 h-100"/>
-            </div>
-            <!-- Recent MO Table -->
-            <div class="p-3 border-top">
-                <h4 class="mb-3">รายการผลิตที่ใกล้เสร็จ / Recent Manufacturing Orders</h4>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>เลขที่ MO / Reference</th>
-                                <th>สินค้า / Product</th>
-                                <th>ปริมาณ / Quantity</th>
-                                <th>วันที่เริ่ม / Start Date</th>
-                                <th>กำหนดเสร็จ / Due Date</th>
-                                <th>สถานะ / Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="state.recentMOs" t-as="mo" t-key="mo.id">
-                                <tr t-on-click="() => this.onMORowClick(mo.id)" class="cursor-pointer hover:bg-gray-100">
-                                    <td><t t-esc="mo.name"/></td>
-                                    <td><t t-esc="mo.product_id[1]"/></td>
-                                    <td><t t-esc="mo.product_qty"/> <t t-esc="mo.product_uom_id[1]"/></td>
-                                    <td><t t-esc="formatDate(mo.date_start)"/></td>
-                                    <td><t t-esc="formatDate(mo.date_finished)"/></td>
-                                    <td>
-                                        <span t-attf-class="badge status-badge {{ getStatusClass(mo.state) }}">
-                                            <t t-esc="getStatusText(mo.state)"/>
-                                        </span>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- Operations Management Table -->
-            <div class="p-3 border-top">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Operations</h4>
-                    <div class="d-flex gap-2">
+        <div class="o_content d-flex flex-column bg-view" t-ref="root">
+            <!-- Inner Scrollable Container -->
+            <div class="o_charts_dashboard_scrollable flex-grow-1" style="overflow-y: auto;">
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <!-- Date Range Selector (Left) -->
+                    <div class="d-flex gap-3">
                         <div class="form-group">
-                            <select class="form-select" t-model="state.selectedOperationType" t-on-change="onOperationTypeChange">
-                                <option value="">-- เลือกประเภท Operation --</option>
-                                <t t-foreach="state.operationTypes" t-as="type" t-key="type.id">
-                                    <option t-att-value="type.id"><t t-esc="type.name"/></option>
-                                </t>
-                            </select>
+                            <label class="form-label">Start Date</label>
+                            <input 
+                                type="date" 
+                                class="form-control" 
+                                t-model="state.startDate"
+                                t-on-change="onDateChange"/>
                         </div>
-                        <button class="btn btn-primary" t-on-click="onRefreshOperations">
-                            <i class="fa fa-refresh"/> Refresh
+                        <div class="form-group">
+                            <label class="form-label">End Date</label>
+                            <input 
+                                type="date" 
+                                class="form-control" 
+                                t-model="state.endDate"
+                                t-on-change="onDateChange"/>
+                        </div>
+                    </div>
+                    <!-- New MO Button (Right) -->
+                    <div>
+                        <button class="btn btn-primary o_list_button_add" type="button">
+                            <i class="fa fa-plus me-1"/> New MO
                         </button>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>เลขที่เอกสาร</th>
-                                <th>วันที่</th>
-                                <th>สินค้า</th>
-                                <th>ปริมาณ</th>
-                                <th>หน่วย</th>
-                                <th>คลัง</th>
-                                <th>สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-if="state.operationDocs.length === 0">
+                <!-- Chart Container -->
+                <div class="chart-container position-relative p-3" style="min-height: 400px;">
+                    <canvas t-ref="chart" class="w-100 h-100"/>
+                </div>
+                <!-- Recent MO Table -->
+                <div class="p-3 border-top">
+                    <h4 class="mb-3">รายการผลิตที่ใกล้เสร็จ / Recent Manufacturing Orders</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td colspan="7" class="text-center">ไม่พบข้อมูล</td>
+                                    <th>เลขที่ MO / Reference</th>
+                                    <th>สินค้า / Product</th>
+                                    <th>ปริมาณ / Quantity</th>
+                                    <th>วันที่เริ่ม / Start Date</th>
+                                    <th>กำหนดเสร็จ / Due Date</th>
+                                    <th>สถานะ / Status</th>
                                 </tr>
-                            </t>
-                            <t t-foreach="state.operationDocs" t-as="doc" t-key="doc.id">
-                                <tr t-on-click="() => this.onOperationDocRowClick(doc)" class="cursor-pointer hover:bg-gray-100">
-                                    <td><t t-esc="doc.name"/></td>
-                                    <td><t t-esc="formatDate(doc.date_start || doc.scheduled_date)"/></td>
-                                    <td><t t-esc="doc.product_id[1]"/></td>
-                                    <td class="text-end"><t t-esc="doc.product_qty || doc.product_uom_qty"/></td>
-                                    <td><t t-esc="doc.product_uom_id[1]"/></td>
-                                    <td><t t-esc="doc.warehouse_id[1]"/></td>
-                                    <td>
-                                        <span t-attf-class="badge status-badge {{ getStatusClass(doc.state) }}">
-                                            <t t-esc="getStatusText(doc.state)"/>
-                                        </span>
-                                    </td>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.recentMOs" t-as="mo" t-key="mo.id">
+                                    <tr t-on-click="() => this.onMORowClick(mo.id)" class="cursor-pointer hover:bg-gray-100">
+                                        <td><t t-esc="mo.name"/></td>
+                                        <td><t t-esc="mo.product_id[1]"/></td>
+                                        <td><t t-esc="mo.product_qty"/> <t t-esc="mo.product_uom_id[1]"/></td>
+                                        <td><t t-esc="formatDate(mo.date_start)"/></td>
+                                        <td><t t-esc="formatDate(mo.date_finished)"/></td>
+                                        <td>
+                                            <span t-attf-class="badge status-badge {{ getStatusClass(mo.state) }}">
+                                                <t t-esc="getStatusText(mo.state)"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Operations Management Table -->
+                <div class="p-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Operations</h4>
+                        <div class="d-flex gap-2">
+                            <div class="form-group">
+                                <select class="form-select" t-model="state.selectedOperationType" t-on-change="onOperationTypeChange">
+                                    <option value="">-- เลือกประเภท Operation --</option>
+                                    <t t-foreach="state.operationTypes" t-as="type" t-key="type.id">
+                                        <option t-att-value="type.id"><t t-esc="type.name"/></option>
+                                    </t>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" t-on-click="onRefreshOperations">
+                                <i class="fa fa-refresh"/> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>เลขที่เอกสาร</th>
+                                    <th>วันที่</th>
+                                    <th>สินค้า</th>
+                                    <th>ปริมาณ</th>
+                                    <th>หน่วย</th>
+                                    <th>คลัง</th>
+                                    <th>สถานะ</th>
                                 </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <t t-if="state.operationDocs.length === 0">
+                                    <tr>
+                                        <td colspan="7" class="text-center">ไม่พบข้อมูล</td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="state.operationDocs" t-as="doc" t-key="doc.id">
+                                    <tr t-on-click="() => this.onOperationDocRowClick(doc)" class="cursor-pointer hover:bg-gray-100">
+                                        <td><t t-esc="doc.name"/></td>
+                                        <td><t t-esc="formatDate(doc.date_start || doc.scheduled_date)"/></td>
+                                        <td><t t-esc="doc.product_id[1]"/></td>
+                                        <td class="text-end"><t t-esc="doc.product_qty || doc.product_uom_qty"/></td>
+                                        <td><t t-esc="doc.product_uom_id[1]"/></td>
+                                        <td><t t-esc="doc.warehouse_id[1]"/></td>
+                                        <td>
+                                            <span t-attf-class="badge status-badge {{ getStatusClass(doc.state) }}">
+                                                <t t-esc="getStatusText(doc.state)"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
