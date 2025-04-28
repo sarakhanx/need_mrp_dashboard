@@ -1,0 +1,11 @@
+/* static/src/css/dashboard_styles.css */
+
+/* Override action manager styles specifically when ChartsDashboard is present */
+.o_action_manager:has(.charts_dashboard_root) {
+    overflow-y: auto !important; /* Allow vertical scroll */
+    overflow-x: hidden; /* Keep horizontal hidden */
+    height: auto !important; /* Allow height to grow with content */
+    min-height: 100%; /* Ensure it fills viewport height initially */
+}
+
+/* Add any other dashboard-specific styles below */ 

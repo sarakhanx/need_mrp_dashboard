@@ -24,7 +24,8 @@
         'web.assets_backend': [
             # XML templates
             'need_mrp_dashboard/static/src/xml/chart_templates.xml',
-            
+            # Custom CSS files
+            'need_mrp_dashboard/static/src/css/dashboard_styles.css',
             # Custom JS files
             'need_mrp_dashboard/static/src/js/charts.js',
         ],
