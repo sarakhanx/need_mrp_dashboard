@@ -28,8 +28,8 @@
                                 <th>รหัสสินค้า / Code</th>
                                 <th>ส่วนประกอบ / Component</th>
                                 <th class="text-right">จำนวนที่ต้องการ</th>
-                                <th class="text-right">จำนวนที่จองแล้ว</th>
-                                <th class="text-right">จำนวนที่ยังขาด</th>
+                                <th class="text-right">จำนวนที่มีของแล้ว</th>
+                                <th class="text-right">จำนวนที่ต้องสั่งซื้อ</th>
                                 <th>หน่วยนับ</th>
                             </tr>
                         </thead>
@@ -40,7 +40,7 @@
                                     <tr>
                                         <td><span t-field="component['product'].default_code"/></td>
                                         <td>
-                                            <span t-field="component['product'].name"/>
+                                            <span t-field="component['product'].display_name"/>
                                         </td>
                                         <td class="text-right">
                                             <span t-esc="'%.3f' % component['qty']"/>
@@ -65,7 +65,7 @@
                                         <td><span t-field="component['product'].default_code"/></td>
                                         <td>
                                             <span style="margin-left: 20px;"> → </span>
-                                            <span t-field="component['product'].name"/>
+                                            <span t-field="component['product'].display_name"/>
                                             <small class="text-muted">
                                                 (จาก: <t t-foreach="component.get('parents', [])" t-as="parent_id">
                                                     <span t-if="materials.get(parent_id)" t-field="materials[parent_id]['product'].name"/><t t-if="not parent_id_last">, </t>
