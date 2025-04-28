@@ -179,23 +179,43 @@ class MrpDashboard(models.Model):
     # Action method for the 'Lots/Serial Numbers' card type
     def action_open_lots_for_category(self):
         self.ensure_one()
-        action = self.env.ref('stock.action_production_lot_form').read()[0]
+        # Build the action dictionary manually instead of reading the reference
+        # action = self.env.ref('stock.action_production_lot_form').read()[0]
 
         # Base domain: only lots with positive quantity
         domain = [('product_qty', '>', 0)]
+        action_name = _('All Lots/SN (Qty > 0)') 
 
         # Add category filter if specified on the dashboard card
         if self.product_category_id:
             domain.append(('product_id.categ_id', '=', self.product_category_id.id))
-            action['name'] = _('SN บ้านที่ผลิตแล้ว - %s') % self.product_category_id.display_name
-        else:
+            action_name = _('เช็ครายการสินค้าที่ผลิตเสร็จแล้ว') # Using the Thai name you preferred
+            # action_name = _('Lots/SN - %s') % self.product_category_id.display_name # Original alternative
+        # else:
             # Optional: Define behavior if no category is set
-            # Could show all lots, or raise an error, or filter something else
-            # For now, it will just show all lots with qty > 0
-            action['name'] = _('All Lots/SN') 
+            # Currently shows all lots with qty > 0
+            # pass
 
-        action['domain'] = domain
+        # Manually define the action dictionary
+        action = {
+            'name': action_name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'stock.lot',
+            'view_mode': 'tree,form,kanban', # Include desired views
+            'domain': domain,
+            'target': 'current', # Or 'new' if you prefer a dialog/new window
+            'context': {} # Ensure clean context
+        }
+
+        # Optional: Reference a specific search view if needed and known to be accessible
+        # try:
+        #     search_view_id = self.env.ref('stock.view_production_lot_filter').id
+        #     action['search_view_id'] = search_view_id
+        # except ValueError:
+        #     _logger.warning("Could not find search view 'stock.view_production_lot_filter' for dashboard action.")
+
+        # action['domain'] = domain
         # Remove default filters from context if any were set by the original action
-        action['context'] = {}
+        # action['context'] = {}
 
         return action 
