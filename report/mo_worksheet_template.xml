@@ -13,7 +13,8 @@
                                 <p>
                                     <strong>เริ่มต้น:</strong> <span t-field="mo.date_start" t-options='{"widget": "datetime"}'/><br/>
                                     <t t-if="mo.date_finished"><strong>วันที่สิ้นสุด:</strong> <span t-field="mo.date_finished" t-options='{"widget": "datetime"}'/><br/></t>
-                                    <strong>Done วันที่:</strong> <span t-field="mo.date_deadline" t-options='{"widget": "datetime"}'/>
+                                    <strong>Done วันที่:</strong> <span t-field="mo.date_deadline" t-options='{"widget": "datetime"}'/><br />
+                                    <strong>เลขที่คำสั่งผลิต:</strong> <span t-field="mo.origin"/>
                                 </p>
                             </div>
                             <div class="col-4 text-right">
@@ -83,6 +84,10 @@
                             <div class="row">
                                 <div class="col-4">
                                     <strong>ผู้รับผิดชอบ:</strong>
+                                    <br/><br/>
+                                    __________________________
+                                    <br/><br/><br/>
+                                    <strong>ผู้รับสินค้า:</strong>
                                     <br/><br/>
                                     __________________________
                                 </div>
