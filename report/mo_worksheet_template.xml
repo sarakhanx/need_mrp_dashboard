@@ -24,16 +24,29 @@
 
                         <!-- Work Orders / Operations -->
                         <div class="mb-4">
-                             <h4>Operations:</h4>
+                             <h4>กระบวนการผลิต:</h4>
                              <table class="table table-sm">
-                                 <thead><tr><th>Operation</th><th>Work Center</th><th>Barcode</th></tr></thead>
+                                 <thead><tr><th>ชื่อกระบวนการ</th><th>สายการผลิต</th><th>Barcode</th></tr></thead>
                                  <tbody>
                                     <t t-foreach="mo.workorder_ids" t-as="wo">
                                         <tr>
-                                            <td><span t-field="wo.name"/></td>
-                                            <td><span t-field="wo.workcenter_id.name"/></td>
+                                            <td><span t-field="wo.name"/> <br/><span t-esc="wo.name"/></td>
+                                            <td><span t-field="wo.workcenter_id.name"/> <br/><span t-esc="wo.workcenter_id.name"/></td>
                                             <td>
-                                                <span t-field="wo.name" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 80, 'height': 80, 'quiet_zone': False}"/>
+                                                <t t-if="web_base_url">
+                                                    <t t-set="cids_val" t-value="str(mo.company_id.id) if mo.company_id else ''"/>
+                                                    <t t-set="base_part_url" t-value="web_base_url + '/web'"/>
+                                                    <t t-set="fragment_part_raw" t-value="'id=' + str(wo.id) + '&amp;model=mrp.workorder&amp;view_type=form' + ('&amp;cids=' + cids_val if cids_val else '')"/>
+                                                    <t t-set="fragment_part_encoded" t-value="fragment_part_raw.replace('&amp;', '%26')"/>
+                                                    <t t-set="wo_url_value" t-value="base_part_url + '%23' + fragment_part_encoded"/>
+                                                    <!-- URL: <span t-esc="wo_url_value"/><br/> -->
+                                                    <img t-attf-src="/report/barcode/?barcode_type=QR&amp;value=#{wo_url_value}&amp;width=80&amp;height=80&amp;humanreadable=0"
+                                                         style="width:80px; height:80px;"
+                                                         alt="Scan for Work Order"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <p class="text-danger small" style="font-size: 10px;">QR Error: web_base_url not available in template context.</p>
+                                                </t>
                                             </td>
                                         </tr>
                                     </t>
@@ -43,7 +56,7 @@
 
 
                         <!-- Component Section -->
-                        <h4>Components:</h4>
+                        <h4>ส่วนประกอบ:</h4>
                         <table class="table table-sm table-bordered">
                             <thead class="thead-light">
                                 <tr>
@@ -68,7 +81,7 @@
                                             <span t-esc="'%.3f' % move.product_uom_qty"/>
                                             <span t-field="move.product_uom.name"/>
                                         </td>
-                                        <td style="height: 50px; vertical-align: bottom;"> 
+                                        <td style="height: 50px; vertical-align: bottom;">
                                         </td>
                                         <td>
                                              <span t-if="move.product_id.barcode" t-field="move.product_id.barcode" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 50, 'quiet_zone': False}"/>
