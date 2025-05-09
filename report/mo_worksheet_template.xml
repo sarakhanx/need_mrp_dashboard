@@ -24,25 +24,35 @@
 
                         <!-- Work Orders / Operations -->
                         <div class="mb-4">
-                             <h4>กระบวนการผลิต:</h4>
+                             <h4>Work Order:</h4>
                              <table class="table table-sm">
-                                 <thead><tr><th>ชื่อกระบวนการ</th><th>สายการผลิต</th><th>Barcode</th></tr></thead>
+                                 <thead><tr><th>ชื่อกระบวนการ</th><th>สายการผลิต</th><th>QRCode</th></tr></thead>
                                  <tbody>
                                     <t t-foreach="mo.workorder_ids" t-as="wo">
                                         <tr>
-                                            <td><span t-field="wo.name"/> <br/><span t-esc="wo.name"/></td>
-                                            <td><span t-field="wo.workcenter_id.name"/> <br/><span t-esc="wo.workcenter_id.name"/></td>
+                                            <td><span t-field="wo.name"/></td>
+                                            <td><span t-field="wo.workcenter_id.name"/></td>
                                             <td>
                                                 <t t-if="web_base_url">
-                                                    <t t-set="cids_val" t-value="str(mo.company_id.id) if mo.company_id else ''"/>
-                                                    <t t-set="base_part_url" t-value="web_base_url + '/web'"/>
-                                                    <t t-set="fragment_part_raw" t-value="'id=' + str(wo.id) + '&amp;model=mrp.workorder&amp;view_type=form' + ('&amp;cids=' + cids_val if cids_val else '')"/>
-                                                    <t t-set="fragment_part_encoded" t-value="fragment_part_raw.replace('&amp;', '%26')"/>
-                                                    <t t-set="wo_url_value" t-value="base_part_url + '%23' + fragment_part_encoded"/>
-                                                    <!-- URL: <span t-esc="wo_url_value"/><br/> -->
+                                                    <t t-set="base_part_url" t-value="web_base_url"/>
+                                                    <t t-set="action_params_raw" t-value="'workorder_id=' + str(wo.id) + '&amp;action_type=start'"/>
+                                                    <t t-set="action_params_encoded" t-value="action_params_raw.replace('&amp;', '%26')"/>
+                                                    <t t-set="wo_url_value" t-value="base_part_url + '/mrp/wo/scan_action?' + action_params_encoded"/>
+
+                                                    <!-- QR Code -->
                                                     <img t-attf-src="/report/barcode/?barcode_type=QR&amp;value=#{wo_url_value}&amp;width=80&amp;height=80&amp;humanreadable=0"
-                                                         style="width:80px; height:80px;"
-                                                         alt="Scan for Work Order"/>
+                                                         style="width:80px; height:80px; margin-bottom: 5px;"
+                                                         alt="Work Order QR Code"/>
+                                                    <br/>
+                                                    <!-- URL Displayed Below QR Code with smaller font -->
+                                                    <span style="font-size: 0.7em;">URL: <span t-esc="wo_url_value"/></span><br style="margin-bottom: 10px;"/>
+
+                                                    <!-- Barcode (Code128) - Commented out because it was too detailed for scanner
+                                                    <img t-attf-src="/report/barcode/?barcode_type=Code128&amp;value=#{wo_url_value}&amp;width=200&amp;height=50&amp;humanreadable=1"
+                                                         style="width:200px; height:50px;"
+                                                         alt="Work Order Barcode (Code128)"/>
+                                                    <br/>
+                                                    -->
                                                 </t>
                                                 <t t-else="">
                                                     <p class="text-danger small" style="font-size: 10px;">QR Error: web_base_url not available in template context.</p>
@@ -56,7 +66,7 @@
 
 
                         <!-- Component Section -->
-                        <h4>ส่วนประกอบ:</h4>
+                        <h4>Components:</h4>
                         <table class="table table-sm table-bordered">
                             <thead class="thead-light">
                                 <tr>

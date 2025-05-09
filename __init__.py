@@ -1,3 +1,4 @@
+from . import controllers
 from . import models
 from . import report
 # Add other imports if you have them, e.g.:
