@@ -35,7 +35,7 @@
                                             <td>
                                                 <t t-if="web_base_url">
                                                     <t t-set="base_part_url" t-value="web_base_url"/>
-                                                    <t t-set="action_params_raw" t-value="'workorder_id=' + str(wo.id) + '&amp;action_type=start'"/>
+                                                    <t t-set="action_params_raw" t-value="'workorder_id=' + str(wo.id)"/>
                                                     <t t-set="action_params_encoded" t-value="action_params_raw.replace('&amp;', '%26')"/>
                                                     <t t-set="wo_url_value" t-value="base_part_url + '/mrp/wo/scan_action?' + action_params_encoded"/>
 
@@ -45,7 +45,7 @@
                                                          alt="Work Order QR Code"/>
                                                     <br/>
                                                     <!-- URL Displayed Below QR Code with smaller font -->
-                                                    <span style="font-size: 0.7em;">URL: <span t-esc="wo_url_value"/></span><br style="margin-bottom: 10px;"/>
+                                                    <span style="font-size: 0.2em;">URL: <span t-esc="wo_url_value"/></span><br style="margin-bottom: 10px;"/>
 
                                                     <!-- Barcode (Code128) - Commented out because it was too detailed for scanner
                                                     <img t-attf-src="/report/barcode/?barcode_type=Code128&amp;value=#{wo_url_value}&amp;width=200&amp;height=50&amp;humanreadable=1"
