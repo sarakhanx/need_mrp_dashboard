@@ -90,6 +90,7 @@
                         <thead>
                             <tr>
                                 <th>เลขที่เอกสาร</th>
+                                <th>เลข JOB</th>
                                 <th>วันที่</th>
                                 <th>สินค้า</th>
                                 <th>ปริมาณ</th>
@@ -107,6 +108,7 @@
                             <t t-foreach="state.operationDocs" t-as="doc" t-key="doc.id">
                                 <tr t-on-click="() => this.onOperationDocRowClick(doc)" class="cursor-pointer hover:bg-gray-100">
                                     <td><t t-esc="doc.name"/></td>
+                                    <td><t t-esc="doc.lot_producing_display_name"/></td>
                                     <td><t t-esc="formatDate(doc.date_start || doc.scheduled_date)"/></td>
                                     <td><t t-esc="doc.product_id[1]"/></td>
                                     <td class="text-end"><t t-esc="doc.product_qty || doc.product_uom_qty"/></td>

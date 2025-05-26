@@ -33,7 +33,16 @@
                                             <td><span t-field="wo.name"/></td>
                                             <td><span t-field="wo.workcenter_id.name"/></td>
                                             <td>
-                                                <span t-field="wo.name" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 80, 'height': 80, 'quiet_zone': False}"/>
+                                                <t t-if="web_base_url">
+                                                    <t t-set="wo_url" t-valuef="{web_base_url}/web#id={wo.id}&amp;model=mrp.workorder&amp;view_type=form&amp;cids={o.company_id.id if o and o.company_id else ''}"/>
+                                                    
+                                                    <img t-attf-src="/report/barcode/?type=QR&amp;value=#{wo_url}&amp;width=80&amp;height=80&amp;humanreadable=0"
+                                                         style="width:80px; height:80px;"
+                                                         alt="Scan for Work Order"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <p class="text-danger small" style="font-size: 10px;">QR Error: web.base.url not set.</p>
+                                                </t>
                                             </td>
                                         </tr>
                                     </t>

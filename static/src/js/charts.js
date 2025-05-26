@@ -411,30 +411,47 @@ export class ChartsDashboard extends Component {
             if (!selectedType) return;
 
             let docs = [];
+            let fieldsToFetch; 
+
             if (selectedType.code === 'mrp_operation') {
+                fieldsToFetch = [
+                    'name', 'date_start', 'product_id', 
+                    'product_qty', 'product_uom_id', 'warehouse_id', 
+                    'state', 'lot_producing_id'
+                ];
                 docs = await this.orm.searchRead(
                     "mrp.production",
                     [['picking_type_id', '=', selectedType.id]],
-                    [
-                        'name', 'date_start', 'product_id', 
-                        'product_qty', 'product_uom_id', 'warehouse_id', 
-                        'state'
-                    ],
+                    fieldsToFetch,
                     { order: 'name desc' }
                 );
             } else {
+                fieldsToFetch = [
+                    'name', 'scheduled_date', 'product_id', 
+                    'product_uom_qty', 'product_uom_id', 
+                    'warehouse_id', 'state'
+                ];
                 docs = await this.orm.searchRead(
                     "stock.picking",
                     [['picking_type_id', '=', selectedType.id]],
-                    [
-                        'name', 'scheduled_date', 'product_id', 
-                        'product_uom_qty', 'product_uom_id', 
-                        'warehouse_id', 'state'
-                    ],
+                    fieldsToFetch,
                     { order: 'name desc' }
                 );
             }
-            this.state.operationDocs = docs;
+            
+            // Process docs to extract lot name for mrp.production
+            this.state.operationDocs = docs.map(doc => {
+                const newDoc = {...doc}; 
+                if (selectedType.code === 'mrp_operation') {
+                    if (newDoc.lot_producing_id && Array.isArray(newDoc.lot_producing_id) && newDoc.lot_producing_id.length > 1) {
+                        newDoc.lot_producing_display_name = newDoc.lot_producing_id[1];
+                    } else {
+                        newDoc.lot_producing_display_name = ''; 
+                    }
+                }
+                return newDoc;
+            });
+
         } catch (error) {
             console.error('Error loading operation documents:', error);
             this.notification.add(
