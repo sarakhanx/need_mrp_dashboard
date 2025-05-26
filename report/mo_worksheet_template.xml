@@ -24,9 +24,9 @@
 
                         <!-- Work Orders / Operations -->
                         <div class="mb-4">
-                             <h4>Operations:</h4>
+                             <h4>WORK ORDER":</h4>
                              <table class="table table-sm">
-                                 <thead><tr><th>Operation</th><th>Work Center</th><th>Barcode</th></tr></thead>
+                                 <thead><tr><th>ชื่อกระบวนการ</th><th>สายการผลิต</th><th>QRCODE</th></tr></thead>
                                  <tbody>
                                     <t t-foreach="mo.workorder_ids" t-as="wo">
                                         <tr>
@@ -34,8 +34,12 @@
                                             <td><span t-field="wo.workcenter_id.name"/></td>
                                             <td>
                                                 <t t-if="web_base_url">
-                                                    <t t-set="wo_actual_url" t-valuef="{web_base_url}/web#id={wo.id}&amp;model=mrp.workorder&amp;view_type=form&amp;cids={o.company_id.id if o and o.company_id else ''}"/>
-                                                    <span t-esc="wo_actual_url" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 80, 'height': 80, 'quiet_zone': False, 'humanreadable': 0}"/>
+                                                    <t t-set="wo_id_str" t-value="str(wo.id)"/>
+                                                    <t t-set="company_id_str" t-value="str(o.company_id.id if o and o.company_id else '')"/>
+                                                    <t t-set="evaluated_wo_url"
+                                                       t-value="web_base_url + '/mrp/wo/scan_action?workorder_id=' + wo_id_str"
+                                                    />
+                                                    <span t-esc="evaluated_wo_url" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 80, 'height': 80, 'quiet_zone': False, 'humanreadable': 0}"/>
                                                 </t>
                                                 <t t-else="">
                                                     <p class="text-danger small" style="font-size: 10px;">QR Error: web.base.url not set.</p>

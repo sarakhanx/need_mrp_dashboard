@@ -16,6 +16,8 @@
         'views/mrp_operation_dashboard_views.xml',
         'views/mrp_workorder_dashboard_views.xml',
         'views/mrp_charts_dashboard.xml',
+        'views/scan_error_template.xml',
+        'views/scan_success_template.xml',
         'report/mrp_bom_materials_report.xml',
         'report/mo_worksheet_report.xml',
         'report/mo_worksheet_template.xml',
