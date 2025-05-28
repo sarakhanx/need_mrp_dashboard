@@ -36,7 +36,7 @@
                         <tbody>
                             <!-- Show main components first -->
                             <t t-foreach="materials.values()" t-as="component">
-                                <t t-if="not component.get('is_subcomponent', False)">
+                                <t t-if="not component.get('is_subcomponent', False) and (component.get('qty', 0.0) - component.get('reserved_qty', 0.0)) > 0">
                                     <tr>
                                         <td><span t-field="component['product'].default_code"/></td>
                                         <td>
@@ -60,7 +60,7 @@
                             
                             <!-- Show subcomponents -->
                             <t t-foreach="materials.values()" t-as="component">
-                                <t t-if="component.get('is_subcomponent', False)">
+                                <t t-if="component.get('is_subcomponent', False) and (component.get('qty', 0.0) - component.get('reserved_qty', 0.0)) > 0">
                                     <tr>
                                         <td><span t-field="component['product'].default_code"/></td>
                                         <td>
