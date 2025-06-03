@@ -4,11 +4,13 @@
         <field name="name">mrp.dashboard.kanban</field>
         <field name="model">mrp.dashboard</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_dashboard o_emphasize_colors" create="0" group_create="false">
+            <kanban class="o_kanban_dashboard o_emphasize_colors" create="1" group_create="false">
                 <field name="color"/>
                 <field name="name"/>
                 <field name="card_type"/>
                 <field name="product_category_id"/>
+                <field name="operation_type_id"/>
+                <field name="custom_domain"/>
                 <field name="count_mo_ready"/>
                 <field name="count_mo_waiting"/>
                 <field name="count_mo_late"/>
@@ -37,6 +39,9 @@
                                 <div class="col-8" role="menuitem" aria-haspopup="true">
                                     <ul class="oe_kanban_colorpicker" data-field="color" role="menu"/>
                                 </div>
+                                <div role="menuitem" class="col-4">
+                                    <a class="dropdown-item" role="menuitem" type="edit">การตั้งค่าการ์ด</a>
+                                </div>
                             </div>
                         </div>
                     </t>
@@ -50,13 +55,18 @@
                                                 <field name="name"/>
                                             </a>
                                         </div>
+                                        <div class="o_secondary" t-if="record.operation_type_id.value">
+                                            <small class="text-muted">
+                                                <i class="fa fa-filter"/> <field name="operation_type_id"/>
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="container o_kanban_card_content">
                                     <div class="row">
                                         <div class="col-6 o_kanban_primary_left">
                                             <button class="btn btn-primary" name="get_action_mo_in_progress" type="object">
-                                                <span><t t-esc="record.count_mo_in_progress.value"/> กำลังดำเนินการ</span>
+                                                <span><t t-esc="record.count_mo_in_progress.value"/> รายการ</span>
                                             </button>
                                         </div>
                                         <div class="col-6 o_kanban_primary_right">
@@ -64,7 +74,7 @@
                                                 <div class="col-12">
                                                     <a name="get_action_mo_waiting" type="object">
                                                         <field name="count_mo_waiting"/>
-                                                        รายการสั่งผลิตแล้ว
+                                                        สั่งผลิตแล้ว
                                                     </a>
                                                 </div>
                                             </div>
@@ -96,7 +106,7 @@
                                     <div class="row">
                                         <div class="col-12">
                                             <button type="object" class="btn btn-primary" name="action_open_lots_for_category">
-                                                <span><i class="fa fa-list"/> ดูรายการ</span>
+                                                <span><i class="fa fa-list"/> เช็ค Serial</span>
                                             </button>
                                         </div>
                                     </div>
@@ -109,10 +119,48 @@
         </field>
     </record>
 
+    <!-- Form View for Configuring Dashboard Cards -->
+    <record id="mrp_dashboard_form_view" model="ir.ui.view">
+        <field name="name">mrp.dashboard.form</field>
+        <field name="model">mrp.dashboard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="card_type"/>
+                        <field name="color" widget="color_picker"/>
+                    </group>
+                    
+                    <group string="Filters &amp; Configuration" colspan="2">
+                        <group invisible="card_type == 'lots'">
+                            <field name="operation_type_id"/>
+                            <field name="custom_domain" 
+                                   placeholder="[('state', '=', 'done')] หรือ [('product_id.categ_id', '=', 1)]"/>
+                        </group>
+                        <group invisible="card_type == 'overview'">
+                            <field name="product_category_id"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Help &amp; Examples" invisible="card_type == 'lots'">
+                        <p colspan="2">
+                            <strong>ตัวอย่าง Custom Domain:</strong><br/>
+                            • <code>[('state', '=', 'done')]</code> - เฉพาะที่เสร็จแล้ว<br/>
+                            • <code>[('product_id.categ_id', '=', 1)]</code> - เฉพาะหมวดหมู่สินค้า ID 1<br/>
+                            • <code>[('date_start', '&gt;=', '2024-01-01')]</code> - เฉพาะที่เริ่มหลัง 1 ม.ค. 2024<br/>
+                            • <code>[('state', 'in', ['confirmed', 'progress']), ('priority', '=', '1')]</code> - หลายเงื่อนไข
+                        </p>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="action_mrp_dashboard_window" model="ir.actions.act_window">
         <field name="name">Manufacturing Summary</field>
         <field name="res_model">mrp.dashboard</field>
-        <field name="view_mode">kanban</field>
+        <field name="view_mode">kanban,form</field>
     </record>
 
     <!-- Parent Menu: Dashboard -->

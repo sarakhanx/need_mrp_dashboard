@@ -91,14 +91,14 @@
                     </table>
 
                     <!-- Footer note -->
-                    <div class="row mt-4">
+                    <!-- <div class="row mt-4">
                         <div class="col-12">
                             <p class="text-muted">
                                 หมายเหตุ: รายการนี้แสดงจำนวนรวมของวัสดุที่ต้องใช้ในการผลิตทั้งหมด / 
                                 Note: This list shows the total quantities of materials needed for all selected manufacturing orders.
                             </p>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </t>
         </t>
