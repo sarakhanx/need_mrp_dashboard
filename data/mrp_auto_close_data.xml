@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Configuration Parameter to Skip to_close State -->
+    <record id="config_skip_to_close_state" model="ir.config_parameter">
+        <field name="key">mrp.skip_to_close_state</field>
+        <field name="value">True</field>
+    </record>
+
+    <!-- Scheduled Action: Auto Close to_close Orders Every 5 Minutes -->
+    <record id="ir_cron_auto_close_mo" model="ir.cron">
+        <field name="name">Auto Close Manufacturing Orders (to_close → done)</field>
+        <field name="model_id" ref="mrp.model_mrp_production"/>
+        <field name="state">code</field>
+        <field name="code">model.auto_close_to_done()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Menu Item for Configuration -->
+    <record id="action_mrp_auto_close_config" model="ir.actions.act_window">
+        <field name="name">MRP Auto Close Configuration</field>
+        <field name="res_model">ir.config_parameter</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('key', 'like', 'mrp.%')]</field>
+        <field name="context">{'default_key': 'mrp.skip_to_close_state'}</field>
+    </record>
+
+    <menuitem id="menu_mrp_auto_close_config"
+        name="Auto Close Configuration"
+        parent="menu_mrp_dashboard_root"
+        action="action_mrp_auto_close_config"
+        sequence="10"/>
+</odoo> 
