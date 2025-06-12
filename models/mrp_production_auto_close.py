@@ -17,7 +17,7 @@ class MrpProduction(models.Model):
         
         for order in to_close_orders:
             try:
-                # Use the standard button_mark_done method
+                # Use the standard button_mark_done method to ensure proper stock handling
                 order.button_mark_done()
                 success_count += 1
                 _logger.info(f"Successfully closed MO {order.name}")
@@ -38,6 +38,10 @@ class MrpProduction(models.Model):
 
     def _auto_close_if_needed(self):
         """Check and auto-close if all conditions are met"""
+        # Prevent recursion by checking context
+        if self.env.context.get('auto_closing_in_progress'):
+            return
+            
         skip_to_close = self.env['ir.config_parameter'].sudo().get_param('mrp.skip_to_close_state', 'False')
         
         if skip_to_close.lower() == 'true':
@@ -48,12 +52,10 @@ class MrpProduction(models.Model):
                     if all_workorders_done and production.workorder_ids:
                         _logger.info(f"All work orders done for MO {production.name}, auto-closing")
                         try:
-                            if production.state == 'to_close':
-                                production.write({'state': 'done', 'date_finished': fields.Datetime.now()})
-                            else:
-                                production.button_mark_done()
-                                if production.state == 'to_close':
-                                    production.write({'state': 'done', 'date_finished': fields.Datetime.now()})
+                            # Use context to prevent recursion
+                            production_with_context = production.with_context(auto_closing_in_progress=True)
+                            # Always use button_mark_done to ensure proper stock handling
+                            production_with_context.button_mark_done()
                             _logger.info(f"Successfully auto-closed MO {production.name}")
                         except Exception as e:
                             _logger.error(f"Failed to auto-close MO {production.name}: {str(e)}")
@@ -65,27 +67,32 @@ class MrpProduction(models.Model):
         return result
 
     def button_mark_done(self):
-        """Override button_mark_done to add logging and handle auto-close"""
+        """Override button_mark_done to handle auto-close properly"""
         _logger.info(f"button_mark_done called for MO {self.name}, current state: {self.state}")
         
         # Check if we should skip to_close state
         skip_to_close = self.env['ir.config_parameter'].sudo().get_param('mrp.skip_to_close_state', 'False')
         
-        if skip_to_close.lower() == 'true' and self.state == 'to_close':
-            # Force state to done directly
-            _logger.info(f"Forcing MO {self.name} from to_close to done")
-            self.write({'state': 'done', 'date_finished': fields.Datetime.now()})
-            return True
-        
-        result = super(MrpProduction, self).button_mark_done()
-        _logger.info(f"button_mark_done completed for MO {self.name}, new state: {self.state}")
-        
-        # Auto-close if we ended up in to_close state
-        if self.state == 'to_close' and skip_to_close.lower() == 'true':
-            _logger.info(f"Auto-closing MO {self.name} that ended up in to_close state")
-            self.write({'state': 'done', 'date_finished': fields.Datetime.now()})
-        
-        return result
+        # If skip_to_close is enabled and we're not already auto-closing
+        if skip_to_close.lower() == 'true' and not self.env.context.get('auto_closing_in_progress'):
+            # Use context to prevent auto-close recursion
+            self_with_context = self.with_context(auto_closing_in_progress=True)
+            
+            # Call parent method
+            result = super(MrpProduction, self_with_context).button_mark_done()
+            
+            # If we ended up in to_close, call again to complete to done
+            if self.state == 'to_close':
+                _logger.info(f"MO {self.name} in to_close, completing to done")
+                result = super(MrpProduction, self_with_context).button_mark_done()
+            
+            _logger.info(f"button_mark_done completed for MO {self.name}, final state: {self.state}")
+            return result
+        else:
+            # Normal processing without auto-close
+            result = super(MrpProduction, self).button_mark_done()
+            _logger.info(f"button_mark_done completed for MO {self.name}, new state: {self.state}")
+            return result
 
     def write(self, vals):
         """Override write to auto-close when state changes to to_close"""
@@ -97,9 +104,15 @@ class MrpProduction(models.Model):
             
             if skip_to_close.lower() == 'true':
                 for record in self:
-                    if record.state == 'to_close':
+                    if record.state == 'to_close' and not self.env.context.get('auto_closing_in_progress'):
                         _logger.info(f"Auto-closing MO {record.name} that was set to to_close")
-                        record.write({'state': 'done', 'date_finished': fields.Datetime.now()})
+                        try:
+                            # Use context to prevent recursion
+                            record_with_context = record.with_context(auto_closing_in_progress=True)
+                            # Use button_mark_done to ensure proper stock handling
+                            record_with_context.button_mark_done()
+                        except Exception as e:
+                            _logger.error(f"Failed to auto-close MO {record.name}: {str(e)}")
         
         return result
 
