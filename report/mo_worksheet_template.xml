@@ -9,7 +9,10 @@
                         <div class="row mb-4">
                             <div class="col-8">
                                 <h2><span t-field="mo.name"/></h2>
-                                <h3><span t-field="mo.product_id.display_name"/></h3>
+                                <div class="mb-2">
+                                    <span t-field="mo.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False}"/>
+                                </div>
+                                <h5><strong><span t-field="mo.product_id.display_name"/></strong></h5>
                                 <p>
                                     <strong>เริ่มต้น:</strong> <span t-field="mo.date_start" t-options='{"widget": "datetime"}'/><br/>
                                     <t t-if="mo.date_finished"><strong>วันที่สิ้นสุด:</strong> <span t-field="mo.date_finished" t-options='{"widget": "datetime"}'/><br/></t>
@@ -24,7 +27,7 @@
 
                         <!-- Work Orders / Operations -->
                         <div class="mb-4">
-                             <h4>WORK ORDER":</h4>
+                             <h4>WORK ORDER:</h4>
                              <table class="table table-sm">
                                  <thead><tr><th>ชื่อกระบวนการ</th><th>สายการผลิต</th><th>QRCODE</th></tr></thead>
                                  <tbody>
@@ -58,7 +61,7 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th style="width: 50px;">รูปสินค้า</th>
-                                    <th> รหัสสินค้า] - ชื่อสินค้า</th>
+                                    <th> รหัสสินค้า - ชื่อสินค้า</th>
                                     <th class="text-right">จำนวน</th>
                                     <th>จำนวนเบิกจริง</th>
                                     <th style="width: 150px;">บาร์โค้ด</th>
