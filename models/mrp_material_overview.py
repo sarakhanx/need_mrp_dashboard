@@ -646,17 +646,13 @@ class MrpProductionMaterialOverview(models.Model):
         }
 
     def _get_sub_mos_for_component(self, product):
-        """หา MO ย่อยที่ produce product นี้ และ components ของ MO ย่อยนั้น"""
+        """หา MO ย่อยที่ produce product นี้ และเกี่ยวข้องกับ MO หลักจริงๆ"""
         try:
-            # หา MO ที่ produce product นี้เท่านั้น (ไม่เอา MO อื่นๆ)
-            sub_mos = self.env['mrp.production'].search([
-                ('product_id', '=', product.id),  # ต้อง produce product นี้เท่านั้น
-                ('id', '!=', self.id),  # ไม่ใช่ MO หลัก
-                ('state', 'in', ['draft', 'confirmed', 'progress', 'to_close', 'done'])
-            ], limit=5)
+            # หา MO ย่อยที่เกี่ยวข้องกับ MO หลักก่อน
+            child_mo_ids = self._get_child_manufacturing_orders()
             
-            # **เพิ่ม Mock Data สำหรับทดสอบ (ถ้าไม่เจอ real data)**
-            if not sub_mos:
+            if not child_mo_ids:
+                # ถ้าไม่มี MO ย่อย ให้ return mock data
                 mock_sub_mos = [{
                     'id': 9999,
                     'name': f'MOCK-{product.name[:10]}-001',
@@ -692,6 +688,15 @@ class MrpProductionMaterialOverview(models.Model):
                     'total_cost': 130.0
                 }]
                 return mock_sub_mos
+            
+            # หา Sub MOs ที่ produce product นี้ และอยู่ในรายการ child MOs
+            sub_mos = self.env['mrp.production'].search([
+                ('id', 'in', child_mo_ids),  # เฉพาะ MO ย่อยที่เกี่ยวข้อง
+                ('product_id', '=', product.id),  # ต้อง produce product นี้เท่านั้น
+                ('state', 'in', ['draft', 'confirmed', 'progress', 'to_close', 'done'])
+            ], limit=5)
+            
+            _logger.info(f"Found {len(sub_mos)} related Sub MOs for product {product.name} in MO {self.name}")
             
             result = []
             for sub_mo in sub_mos:
