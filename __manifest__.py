@@ -11,9 +11,10 @@
     'data': [
         'security/ir.model.access.csv',
         'security/mrp_security.xml',
+        'views/mrp_dashboard_views.xml',
+        'views/mrp_production_inherit.xml',
         'data/mrp_dashboard_data.xml',
         'data/mrp_auto_close_data.xml',
-        'views/mrp_dashboard_views.xml',
         'views/mrp_operation_dashboard_views.xml',
         'views/mrp_workorder_dashboard_views.xml',
         'views/mrp_charts_dashboard.xml',
@@ -25,12 +26,15 @@
     ],
     'assets': {
         'web.assets_backend': [
-            # XML templates
-            'need_mrp_dashboard/static/src/xml/chart_templates.xml',
             # Custom CSS files
             'need_mrp_dashboard/static/src/css/dashboard_styles.css',
+            'need_mrp_dashboard/static/src/css/delivery_hierarchy.css',
             # Custom JS files
             'need_mrp_dashboard/static/src/js/charts.js',
+            'need_mrp_dashboard/static/src/js/delivery_hierarchy_widget.js',
+            # XML templates for backend
+            'need_mrp_dashboard/static/src/xml/chart_templates.xml',
+            'need_mrp_dashboard/static/src/xml/delivery_hierarchy_template.xml',
         ],
         'web.report_assets_common': [
             'need_mrp_dashboard/static/src/css/report_styles.css',
@@ -41,4 +45,7 @@
     'application': True,
     'auto_install': False,
     'license': 'LGPL-3',
+    'external_dependencies': {
+        'python': ['xlsxwriter'],
+    },
 } 
