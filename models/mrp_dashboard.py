@@ -107,12 +107,14 @@ class MrpDashboard(models.Model):
 
     def get_mo_action(self):
         self.ensure_one()
-        action = self.env.ref('mrp.mrp_production_action').read()[0]
-        action.update({
+        return {
+            'name': 'Manufacturing Orders',
+            'type': 'ir.actions.act_window',
+            'res_model': 'mrp.production',
+            'view_mode': 'tree,form,kanban',
             'domain': self._get_mo_domain(),
             'context': {'search_default_todo': 1} if self.name != 'Completed Today' else {}
-        })
-        return action
+        }
 
     def get_action_mo_ready(self):
         self.ensure_one()

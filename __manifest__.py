@@ -23,6 +23,8 @@
         'report/mrp_bom_materials_report.xml',
         'report/mo_worksheet_report.xml',
         'report/mo_worksheet_template.xml',
+        'report/size_label_report.xml',
+        'report/size_label_template.xml',
     ],
     'assets': {
         'web.assets_backend': [
