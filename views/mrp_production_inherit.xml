@@ -45,7 +45,7 @@
                         <span class="o_stat_value">
                             <field name="bom_materials_print_date" widget="date"/>
                         </span>
-                        <span class="o_stat_text">BOM Materials Printed</span>
+                        <span class="o_stat_text">พิมพ์การสั่งซื้อ</span>
                     </div>
                 </button>
             </xpath>
@@ -53,13 +53,13 @@
             <!-- Add BOM Materials Print Status Indicator -->
             <xpath expr="//field[@name='name']" position="after">
                 <field name="bom_materials_printed" widget="boolean_toggle" 
-                       string="BOM Materials Printed" 
-                       help="BOM Materials Report Print Status"/>
+                       nolabel="1"
+                       help="สถานะการพิมพ์รายการสั่งซื้อวัตถุดิบ"/>
             </xpath>
             
             <!-- Add fields to form for tracking -->
             <xpath expr="//sheet" position="inside">
-                <group name="bom_materials_print_info" string="BOM Materials Print Info" 
+                <group name="bom_materials_print_info" string="ข้อมูลการพิมพ์รายการสั่งซื้อ" 
                        invisible="not bom_materials_printed">
                     <field name="bom_materials_printed" readonly="1"/>
                     <field name="bom_materials_print_date" readonly="1"/>

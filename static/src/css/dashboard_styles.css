@@ -128,4 +128,27 @@
     font-size: 12px;
     white-space: nowrap;
     z-index: 1000;
+}
+
+/* Form View Toggle with Muted Text Above */
+.o_form_view .o_field_boolean_toggle[name="bom_materials_printed"] {
+    position: relative;
+    margin-top: 20px;
+}
+
+/* Hide the default dots in form view */
+.o_form_view .o_field_boolean_toggle[name="bom_materials_printed"]::before {
+    display: none !important;
+}
+
+.o_form_view .o_field_boolean_toggle[name="bom_materials_printed"]::after {
+    content: "พิมพ์รายการสั่งซื้อแล้ว";
+    position: absolute;
+    top: -18px;
+    left: 0;
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 400;
+    white-space: nowrap;
+    opacity: 0.8;
 } 
