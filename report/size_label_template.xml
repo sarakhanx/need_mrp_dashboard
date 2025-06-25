@@ -5,7 +5,7 @@
             <div class="page" style="font-family: Arial, sans-serif; font-size: 12px;">
                 <t t-foreach="docs" t-as="doc">
                     <!-- Each label takes full width and quarter page height -->
-                    <div style="width: 100%; height: 70mm; padding: 2mm; box-sizing: border-box; border: 2px solid #000; margin-bottom: 2mm;">
+                    <div style="width: 100%; height: 68mm; padding: 2mm; box-sizing: border-box; border: 2px solid #000; margin-bottom: 4mm;">
                         
                         <!-- Product Name (Top) with border -->
                         <div style="text-align: center; margin-bottom: 2mm; width: 100%; padding: 1mm; border-bottom: 1px solid #ccc;">
@@ -22,24 +22,24 @@
                         </div>
                         
                         <!-- Barcode and Details in horizontal layout -->
-                        <div style="display: flex; width: 100%; height: 45mm;">
+                        <div style="display: flex; width: 100%; height: 42mm;">
                             <!-- Barcode Section (Left) -->
                             <div style="flex: 1; text-align: center; padding-right: 2mm;">
-                                <div t-if="doc.barcode" style="display: inline-block; border: 2px solid #333; padding: 2mm; background-color: #f9f9f9; border-radius: 3px;">
+                                <div t-if="doc.barcode" style="display: inline-block; border: 2px solid #333; padding: 1mm; background-color: #f9f9f9; border-radius: 3px;">
                                     <span t-esc="doc.barcode" 
-                                          t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False, 'humanreadable': 0}"
-                                          style="width: 80mm; height: 20mm; display: block;"/>
+                                          t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 250, 'height': 50, 'quiet_zone': False, 'humanreadable': 0}"
+                                          style="width: 70mm; height: 15mm; display: block;"/>
                                     <!-- Barcode text below -->
-                                    <div style="margin-top: 2mm; font-size: 8pt; font-family: monospace; text-align: center;">
+                                    <div style="margin-top: 1mm; font-size: 7pt; font-family: monospace; text-align: center;">
                                         <span t-field="doc.barcode"/>
                                     </div>
                                 </div>
-                                <div t-if="not doc.barcode and doc.default_code" style="display: inline-block; border: 2px solid #333; padding: 2mm; background-color: #f9f9f9; border-radius: 3px;">
+                                <div t-if="not doc.barcode and doc.default_code" style="display: inline-block; border: 2px solid #333; padding: 1mm; background-color: #f9f9f9; border-radius: 3px;">
                                     <span t-esc="doc.default_code" 
-                                          t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False, 'humanreadable': 0}"
-                                          style="width: 80mm; height: 20mm; display: block;"/>
+                                          t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 250, 'height': 50, 'quiet_zone': False, 'humanreadable': 0}"
+                                          style="width: 70mm; height: 15mm; display: block;"/>
                                     <!-- Code text below -->
-                                    <div style="margin-top: 2mm; font-size: 8pt; font-family: monospace; text-align: center;">
+                                    <div style="margin-top: 1mm; font-size: 7pt; font-family: monospace; text-align: center;">
                                         <span t-field="doc.default_code"/>
                                     </div>
                                 </div>
