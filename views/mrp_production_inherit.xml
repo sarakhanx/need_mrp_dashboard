@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
         <field name="arch" type="xml">
             <field name="name" position="before">
-                <field name="bom_materials_print_status" string="📋"/>
+                <field name="bom_materials_print_status" string="สถานะการพิมพ์"/>
             </field>
         </field>
     </record>
