@@ -8,4 +8,124 @@
     min-height: 100%; /* Ensure it fills viewport height initially */
 }
 
-/* Add any other dashboard-specific styles below */ 
+/* Add any other dashboard-specific styles below */
+
+/* Dashboard card styles */
+.mrp_dashboard_card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin: 10px;
+    transition: transform 0.2s;
+}
+
+.mrp_dashboard_card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.dashboard_kpi_value {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.dashboard_kpi_label {
+    font-size: 1.1em;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+/* Chart container styles */
+.chart-container {
+    position: relative;
+    height: 400px;
+    margin: 20px 0;
+}
+
+.chart-title {
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+/* BOM Materials Print Status Indicator Styles */
+.o_list_table .o_data_cell .o_field_boolean_toggle {
+    position: relative;
+}
+
+/* Custom styling for BOM Materials print status */
+.o_field_boolean_toggle[name="bom_materials_printed"] {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Red dot for not printed */
+.o_field_boolean_toggle[name="bom_materials_printed"]:not(.o_boolean_toggle_checked)::before {
+    content: "●";
+    color: #e74c3c;
+    font-size: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Green dot for printed */
+.o_field_boolean_toggle[name="bom_materials_printed"].o_boolean_toggle_checked::before {
+    content: "●";
+    color: #27ae60;
+    font-size: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Hover effects */
+.o_field_boolean_toggle[name="bom_materials_printed"]:hover::before {
+    font-size: 18px;
+    transition: font-size 0.2s ease;
+}
+
+/* Alternative circle style */
+.bom_print_status_indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.bom_print_status_indicator.not_printed {
+    background-color: #e74c3c;
+    border: 2px solid #c0392b;
+}
+
+.bom_print_status_indicator.printed {
+    background-color: #27ae60;
+    border: 2px solid #229954;
+}
+
+/* Tooltip styles */
+.bom_print_status_indicator[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+} 

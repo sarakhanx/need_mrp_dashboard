@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Inherit MRP Production Form to Add Smart Button -->
+    <!-- Add Print Status Field to Tree View -->
+    <record id="mrp_production_tree_inherit_print_status" model="ir.ui.view">
+        <field name="name">mrp.production.tree.inherit.print.status</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="name" position="before">
+                <field name="bom_materials_print_status" string="📋"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Inherit MRP Production Form to Add Smart Button and Print Status -->
     <record id="mrp_production_form_inherit_deliveries" model="ir.ui.view">
         <field name="name">mrp.production.form.inherit.deliveries</field>
         <field name="model">mrp.production</field>
@@ -22,6 +34,37 @@
                         icon="fa-usd"
                         string="ภาพรวมและต้นทุน">
                 </button>
+                
+                <!-- BOM Materials Print Status Button -->
+                <button name="action_view_bom_materials_print_info" 
+                        type="object" 
+                        class="oe_stat_button" 
+                        icon="fa-print"
+                        invisible="not bom_materials_printed">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="bom_materials_print_date" widget="date"/>
+                        </span>
+                        <span class="o_stat_text">BOM Materials Printed</span>
+                    </div>
+                </button>
+            </xpath>
+            
+            <!-- Add BOM Materials Print Status Indicator -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="bom_materials_printed" widget="boolean_toggle" 
+                       string="BOM Materials Printed" 
+                       help="BOM Materials Report Print Status"/>
+            </xpath>
+            
+            <!-- Add fields to form for tracking -->
+            <xpath expr="//sheet" position="inside">
+                <group name="bom_materials_print_info" string="BOM Materials Print Info" 
+                       invisible="not bom_materials_printed">
+                    <field name="bom_materials_printed" readonly="1"/>
+                    <field name="bom_materials_print_date" readonly="1"/>
+                    <field name="bom_materials_print_user_id" readonly="1"/>
+                </group>
             </xpath>
         </field>
     </record>

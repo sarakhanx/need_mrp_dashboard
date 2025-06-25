@@ -4,63 +4,73 @@
         <t t-call="web.basic_layout">
             <div class="page" style="font-family: Arial, sans-serif; font-size: 12px;">
                 <t t-foreach="docs" t-as="doc">
-                    <!-- Each product takes exactly half page (148.5mm) with border -->
-                    <div t-attf-style="height: 148.5mm; width: 100%; padding: 8mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px solid #000; margin: 2mm; #{doc_index % 2 == 0 and 'border-bottom: 1px dashed #000;' or ''} #{doc_index % 2 == 1 and 'page-break-after: always;' or ''}">
+                    <!-- Each label takes full width and quarter page height -->
+                    <div style="width: 100%; height: 70mm; padding: 2mm; box-sizing: border-box; border: 2px solid #000; margin-bottom: 2mm;">
                         
                         <!-- Product Name (Top) with border -->
-                        <div style="text-align: center; margin-bottom: 6mm; width: 100%; padding: 3mm; border-bottom: 1px solid #ccc;">
-                            <h1 style="font-size: 18pt; font-weight: bold; margin: 0; color: #000;">
+                        <div style="text-align: center; margin-bottom: 2mm; width: 100%; padding: 1mm; border-bottom: 1px solid #ccc;">
+                            <h1 style="font-size: 12pt; font-weight: bold; margin: 0; color: #000;">
                                 <span t-field="doc.display_name"/>
                             </h1>
                         </div>
                         
                         <!-- Product Code with border -->
-                        <div style="text-align: center; margin-bottom: 6mm; width: 100%; padding: 2mm; border-bottom: 1px solid #eee;">
-                            <h2 style="font-size: 14pt; margin: 0; color: #666;">
+                        <div style="text-align: center; margin-bottom: 2mm; width: 100%; padding: 1mm; border-bottom: 1px solid #eee;">
+                            <h2 style="font-size: 10pt; margin: 0; color: #666;">
                                 Code: <span t-field="doc.default_code"/>
                             </h2>
                         </div>
                         
-                        <!-- Large Barcode with enhanced border -->
-                        <div style="text-align: center; margin-bottom: 6mm; width: 100%;">
-                            <div t-if="doc.barcode" style="display: inline-block; border: 2px solid #333; padding: 3mm; background-color: #f9f9f9; border-radius: 3px;">
-                                <span t-esc="doc.barcode" 
-                                      t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 80, 'quiet_zone': False, 'humanreadable': 0}"
-                                      style="width: 120mm; height: 20mm; display: block;"/>
-                                <!-- Barcode text below with spacing -->
-                                <div style="margin-top: 3mm; font-size: 10pt; font-family: monospace; text-align: center; padding: 1mm; border-top: 1px solid #ddd;">
-                                    <span t-field="doc.barcode"/>
+                        <!-- Barcode and Details in horizontal layout -->
+                        <div style="display: flex; width: 100%; height: 45mm;">
+                            <!-- Barcode Section (Left) -->
+                            <div style="flex: 1; text-align: center; padding-right: 2mm;">
+                                <div t-if="doc.barcode" style="display: inline-block; border: 2px solid #333; padding: 2mm; background-color: #f9f9f9; border-radius: 3px;">
+                                    <span t-esc="doc.barcode" 
+                                          t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False, 'humanreadable': 0}"
+                                          style="width: 80mm; height: 20mm; display: block;"/>
+                                    <!-- Barcode text below -->
+                                    <div style="margin-top: 2mm; font-size: 8pt; font-family: monospace; text-align: center;">
+                                        <span t-field="doc.barcode"/>
+                                    </div>
+                                </div>
+                                <div t-if="not doc.barcode and doc.default_code" style="display: inline-block; border: 2px solid #333; padding: 2mm; background-color: #f9f9f9; border-radius: 3px;">
+                                    <span t-esc="doc.default_code" 
+                                          t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False, 'humanreadable': 0}"
+                                          style="width: 80mm; height: 20mm; display: block;"/>
+                                    <!-- Code text below -->
+                                    <div style="margin-top: 2mm; font-size: 8pt; font-family: monospace; text-align: center;">
+                                        <span t-field="doc.default_code"/>
+                                    </div>
                                 </div>
                             </div>
-                            <div t-if="not doc.barcode and doc.default_code" style="display: inline-block; border: 2px solid #333; padding: 3mm; background-color: #f9f9f9; border-radius: 3px;">
-                                <span t-esc="doc.default_code" 
-                                      t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 80, 'quiet_zone': False, 'humanreadable': 0}"
-                                      style="width: 120mm; height: 20mm; display: block;"/>
-                                <!-- Code text below with spacing -->
-                                <div style="margin-top: 3mm; font-size: 10pt; font-family: monospace; text-align: center; padding: 1mm; border-top: 1px solid #ddd;">
-                                    <span t-field="doc.default_code"/>
+                            
+                            <!-- Product Details (Right) -->
+                            <div style="flex: 1; padding-left: 2mm;">
+                                <div style="width: 100%; border: 1px solid #ccc; border-radius: 3px; background-color: #fafafa; height: 100%;">
+                                    <table style="width: 100%; height: 100%; border-collapse: collapse;">
+                                        <tr style="border-bottom: 1px solid #eee;">
+                                            <td style="padding: 2mm; font-size: 9pt; font-weight: bold; border-right: 1px solid #eee;">Category:</td>
+                                            <td style="padding: 2mm; font-size: 9pt;"><span t-field="doc.categ_id.name"/></td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #eee;">
+                                            <td style="padding: 2mm; font-size: 9pt; font-weight: bold; border-right: 1px solid #eee;">Price:</td>
+                                            <td style="padding: 2mm; font-size: 9pt;"><span t-field="doc.list_price"/> THB</td>
+                                        </tr>
+                                        <tr t-if="doc.barcode">
+                                            <td style="padding: 2mm; font-size: 9pt; font-weight: bold; border-right: 1px solid #eee;">Barcode:</td>
+                                            <td style="padding: 2mm; font-size: 9pt;"><span t-field="doc.barcode"/></td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Product Details with border -->
-                        <div style="text-align: center; width: 100%; border: 1px solid #ccc; border-radius: 3px; background-color: #fafafa;">
-                            <table style="width: 100%; border-collapse: collapse; margin: 0 auto;">
-                                <tr style="border-bottom: 1px solid #eee;">
-                                    <td style="padding: 3mm; font-size: 11pt; font-weight: bold; border-right: 1px solid #eee;">Category:</td>
-                                    <td style="padding: 3mm; font-size: 11pt;"><span t-field="doc.categ_id.name"/></td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #eee;">
-                                    <td style="padding: 3mm; font-size: 11pt; font-weight: bold; border-right: 1px solid #eee;">Price:</td>
-                                    <td style="padding: 3mm; font-size: 11pt;"><span t-field="doc.list_price"/> THB</td>
-                                </tr>
-                                <tr t-if="doc.barcode">
-                                    <td style="padding: 3mm; font-size: 11pt; font-weight: bold; border-right: 1px solid #eee;">Barcode:</td>
-                                    <td style="padding: 3mm; font-size: 11pt;"><span t-field="doc.barcode"/></td>
-                                </tr>
-                            </table>
                         </div>
                     </div>
+                    
+                    <!-- Page break after every 4 labels -->
+                    <t t-if="doc_index % 4 == 3 and not doc_last">
+                        <div style="page-break-after: always;"></div>
+                    </t>
                 </t>
             </div>
         </t>

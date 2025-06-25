@@ -6,6 +6,77 @@ _logger = logging.getLogger(__name__)
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
+    # Field for tracking BOM Materials Report printing
+    bom_materials_printed = fields.Boolean(
+        string='BOM Materials Printed',
+        default=False,
+        help='Indicates if BOM Materials Report has been printed for this MO'
+    )
+    bom_materials_print_date = fields.Datetime(
+        string='BOM Materials Print Date',
+        help='Date and time when BOM Materials Report was printed'
+    )
+    bom_materials_print_user_id = fields.Many2one(
+        'res.users',
+        string='Printed by',
+        help='User who printed the BOM Materials Report'
+    )
+    
+    # Computed field for display in list view
+    bom_materials_print_status = fields.Char(
+        string='Print Status',
+        compute='_compute_bom_materials_print_status',
+        help='Visual indicator for BOM Materials Report print status'
+    )
+
+    @api.depends('bom_materials_printed')
+    def _compute_bom_materials_print_status(self):
+        """Compute print status indicator for list view"""
+        for record in self:
+            if record.bom_materials_printed:
+                record.bom_materials_print_status = '🟢 Printed'
+            else:
+                record.bom_materials_print_status = '🔴 Not Printed'
+
+    def mark_bom_materials_printed(self):
+        """Mark this MO as having BOM Materials Report printed"""
+        self.write({
+            'bom_materials_printed': True,
+            'bom_materials_print_date': fields.Datetime.now(),
+            'bom_materials_print_user_id': self.env.user.id,
+        })
+        return True
+
+    def reset_bom_materials_printed(self):
+        """Reset the BOM Materials Report printed status"""
+        self.write({
+            'bom_materials_printed': False,
+            'bom_materials_print_date': False,
+            'bom_materials_print_user_id': False,
+        })
+        return True
+
+    def action_view_bom_materials_print_info(self):
+        """Show BOM Materials Print Information"""
+        return {
+            'name': 'BOM Materials Print Information',
+            'type': 'ir.actions.act_window',
+            'res_model': 'mrp.production',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref('mrp.mrp_production_form_view').id,
+            'target': 'new',
+            'context': {'default_bom_materials_printed': self.bom_materials_printed}
+        }
+
+    def action_reset_bom_materials_printed(self):
+        """Action to reset BOM Materials printed status"""
+        self.reset_bom_materials_printed()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
+
     @api.model
     def auto_close_to_done(self):
         """Automatically mark 'to_close' manufacturing orders as 'done'"""
