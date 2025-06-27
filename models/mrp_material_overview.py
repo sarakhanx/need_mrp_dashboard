@@ -352,14 +352,27 @@ class MrpProductionMaterialOverview(models.Model):
         return state_map.get(state, state.title())
     
     def _calculate_mo_cost(self):
-        """คำนวณต้นทุน MO แบบครอบคลุม"""
+        """คำนวณต้นทุน MO แบบครอบคลุม (แก้ไขเรื่องการคำนวณซ้ำ)"""
         try:
             total_cost = 0
             
-            # 1. ต้นทุนจาก raw materials
+            # 1. ต้นทุนจาก raw materials (เฉพาะที่ไม่มี Sub MO)
             material_cost = 0
+            child_mo_ids = self._get_child_manufacturing_orders()
+            child_mo_product_ids = set()
+            
+            # หา product IDs ที่มี Sub MOs เพื่อไม่ให้นับซ้ำ
+            if child_mo_ids:
+                child_mos = self.env['mrp.production'].browse(child_mo_ids)
+                child_mo_product_ids = set(child_mos.mapped('product_id.id'))
+            
             for move in self.move_raw_ids:
                 try:
+                    # ข้ามต้นทุนของ products ที่มี Sub MOs (เพราะจะคำนวณใน Sub MO แทน)
+                    if move.product_id.id in child_mo_product_ids:
+                        _logger.debug(f"Skipping material cost for {move.product_id.name} - has Sub MO")
+                        continue
+                        
                     unit_cost = getattr(move.product_id, 'standard_price', 0) or 0
                     quantity = move.product_uom_qty or 0
                     material_cost += quantity * unit_cost
@@ -383,10 +396,9 @@ class MrpProductionMaterialOverview(models.Model):
             
             total_cost += operation_cost
             
-            # 3. ต้นทุนจาก Sub MOs (ถ้ามี)
+            # 3. ต้นทุนจาก Sub MOs (ถ้ามี) - ใช้แทนต้นทุน materials ที่ข้ามไป
             sub_mo_cost = 0
             try:
-                child_mo_ids = self._get_child_manufacturing_orders()
                 if child_mo_ids:
                     child_mos = self.env['mrp.production'].browse(child_mo_ids)
                     for child_mo in child_mos:
@@ -409,14 +421,27 @@ class MrpProductionMaterialOverview(models.Model):
             return 0
 
     def _calculate_real_cost(self):
-        """คำนวณต้นทุนจริง (จากที่ใช้ไปแล้ว)"""
+        """คำนวณต้นทุนจริง (จากที่ใช้ไปแล้ว) - แก้ไขเรื่องการคำนวณซ้ำ"""
         try:
             total_real_cost = 0
             
-            # 1. ต้นทุนจาก materials ที่ใช้จริง
+            # 1. ต้นทุนจาก materials ที่ใช้จริง (เฉพาะที่ไม่มี Sub MO)
             real_material_cost = 0
+            child_mo_ids = self._get_child_manufacturing_orders()
+            child_mo_product_ids = set()
+            
+            # หา product IDs ที่มี Sub MOs เพื่อไม่ให้นับซ้ำ
+            if child_mo_ids:
+                child_mos = self.env['mrp.production'].browse(child_mo_ids)
+                child_mo_product_ids = set(child_mos.mapped('product_id.id'))
+            
             for move in self.move_raw_ids.filtered(lambda m: m.state == 'done'):
                 try:
+                    # ข้ามต้นทุนของ products ที่มี Sub MOs (เพราะจะคำนวณใน Sub MO แทน)
+                    if move.product_id.id in child_mo_product_ids:
+                        _logger.debug(f"Skipping real material cost for {move.product_id.name} - has Sub MO")
+                        continue
+                        
                     unit_cost = getattr(move.product_id, 'standard_price', 0) or 0
                     quantity_used = move.quantity or 0  # จำนวนที่ใช้จริง
                     real_material_cost += quantity_used * unit_cost
@@ -440,10 +465,9 @@ class MrpProductionMaterialOverview(models.Model):
                     
             total_real_cost += real_operation_cost
             
-            # 3. ต้นทุนจาก Sub MOs ที่เสร็จแล้ว
+            # 3. ต้นทุนจาก Sub MOs ที่เสร็จแล้ว - ใช้แทนต้นทุน materials ที่ข้ามไป
             real_sub_mo_cost = 0
             try:
-                child_mo_ids = self._get_child_manufacturing_orders()
                 if child_mo_ids:
                     child_mos = self.env['mrp.production'].browse(child_mo_ids)
                     for child_mo in child_mos.filtered(lambda m: m.state == 'done'):
@@ -742,7 +766,7 @@ class MrpProductionMaterialOverview(models.Model):
                     'state': sub_mo.state,
                     'formatted_state': self._get_formatted_state_for_mo(sub_mo.state),
                     'components': sub_components,
-                    'total_cost': sum(comp['total_cost'] for comp in sub_components)
+                    'total_cost': sub_mo._calculate_mo_cost()  # ใช้ต้นทุนจริงจาก _calculate_mo_cost()
                 }
                 result.append(sub_mo_data)
             
