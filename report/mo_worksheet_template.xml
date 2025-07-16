@@ -7,12 +7,13 @@
                     <div class="page mo_worksheet_report">
                         <!-- Header Section -->
                         <div class="row mb-4">
-                            <div class="col-8">
-                                <h2><span t-field="mo.name"/></h2>
-                                <div class="mb-2">
-                                    <span t-field="mo.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False}"/>
-                                </div>
-                                <h5><strong><span t-field="mo.product_id.display_name"/></strong></h5>
+                            <h2><span t-field="mo.name"/></h2>
+                            <div class="mb-2">
+                                <span t-field="mo.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 60, 'quiet_zone': False}"/>
+                            </div>
+                            <h5><strong><span t-field="mo.product_id.display_name"/></strong></h5>
+                        <hr/>
+                            <div class="col-6">
                                 <p>
                                     <strong>เริ่มต้น:</strong> <span t-field="mo.date_start" t-options='{"widget": "datetime"}'/><br/>
                                     <t t-if="mo.date_finished"><strong>วันที่สิ้นสุด:</strong> <span t-field="mo.date_finished" t-options='{"widget": "datetime"}'/><br/></t>
@@ -20,8 +21,15 @@
                                     <strong>เลขที่คำสั่งผลิต:</strong> <span t-field="mo.origin"/>
                                 </p>
                             </div>
-                            <div class="col-4 text-right">
-                                <!-- Optionally add company logo or other info -->
+                            <div class="col-6">
+                                <!-- Additional Information Column -->
+                                <div class="text-left">
+                                    <h5><strong>ผู้รับผิดชอบ</strong></h5>
+                                    <p>
+                                        <strong>ชื่อลูกค้า:</strong> <span t-field="mo.customer_name"/><br/>
+                                        <strong>ทีมช่าง:</strong> <span t-field="mo.technician_team"/><br/>
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

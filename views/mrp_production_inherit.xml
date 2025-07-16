@@ -48,6 +48,17 @@
                         <span class="o_stat_text">พิมพ์การสั่งซื้อ</span>
                     </div>
                 </button>
+                
+                <!-- Update Sub MO Fields Button -->
+                <button name="action_update_sub_mo_fields" 
+                        type="object" 
+                        class="oe_stat_button" 
+                        icon="fa-refresh"
+                        invisible="not technician_team and not customer_name">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">อัปเดต MO ย่อย</span>
+                    </div>
+                </button>
             </xpath>
             
             <!-- Add BOM Materials Print Status Indicator -->
@@ -64,6 +75,14 @@
                     <field name="bom_materials_printed" readonly="1"/>
                     <field name="bom_materials_print_date" readonly="1"/>
                     <field name="bom_materials_print_user_id" readonly="1"/>
+                </group>
+            </xpath>
+            
+            <!-- Add new fields in form -->
+            <xpath expr="//group[@name='bom_materials_print_info']" position="before">
+                <group string="ข้อมูลเพิ่มเติม" name="additional_info" colspan="2">
+                    <field name="technician_team" placeholder="ระบุทีมช่างผู้รับผิดชอบ"/>
+                    <field name="customer_name" placeholder="ระบุชื่อลูกค้า"/>
                 </group>
             </xpath>
         </field>

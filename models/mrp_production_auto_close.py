@@ -28,6 +28,16 @@ class MrpProduction(models.Model):
         compute='_compute_bom_materials_print_status',
         help='Visual indicator for BOM Materials Report print status'
     )
+    
+    # Additional fields for MO tracking
+    technician_team = fields.Char(
+        string='ทีมช่างผู้รับผิดชอบ',
+        help='ทีมช่างหรือผู้รับผิดชอบในการผลิต'
+    )
+    customer_name = fields.Char(
+        string='ชื่อลูกค้า',
+        help='ชื่อลูกค้าที่สั่งผลิตภัณฑ์นี้'
+    )
 
     @api.depends('bom_materials_printed')
     def _compute_bom_materials_print_status(self):
@@ -37,6 +47,140 @@ class MrpProduction(models.Model):
                 record.bom_materials_print_status = '🟢 Printed'
             else:
                 record.bom_materials_print_status = '🔴 Not Printed'
+
+    def _find_parent_mo(self):
+        """Find parent MO for sub MO using multiple methods"""
+        parent_mo = None
+        
+        # Method 1: Search by origin field
+        if self.origin:
+            parent_mo = self.search([
+                ('name', '=', self.origin),
+                ('id', '!=', self.id)
+            ], limit=1)
+            
+            if parent_mo:
+                _logger.info(f"Found parent MO {parent_mo.name} for sub MO {self.name} via origin field")
+                return parent_mo
+        
+        # Method 2: Search by procurement group
+        if self.procurement_group_id:
+            parent_mo = self.search([
+                ('procurement_group_id', '=', self.procurement_group_id.id),
+                ('id', '!=', self.id),
+                ('create_date', '<', self.create_date)  # Parent should be created before sub MO
+            ], limit=1, order='create_date desc')
+            
+            if parent_mo:
+                _logger.info(f"Found parent MO {parent_mo.name} for sub MO {self.name} via procurement group")
+                return parent_mo
+        
+        # Method 3: Search by related stock moves
+        try:
+            # Find stock moves that reference this MO as destination
+            related_moves = self.env['stock.move'].search([
+                ('production_id', '=', self.id),
+                ('state', '!=', 'cancel')
+            ], limit=1)
+            
+            if related_moves:
+                # Look for the source move that might be from parent MO
+                source_moves = self.env['stock.move'].search([
+                    ('move_dest_ids', 'in', related_moves.ids),
+                    ('raw_material_production_id', '!=', False),
+                    ('raw_material_production_id', '!=', self.id)
+                ], limit=1)
+                
+                if source_moves:
+                    parent_mo = source_moves.raw_material_production_id
+                    _logger.info(f"Found parent MO {parent_mo.name} for sub MO {self.name} via stock moves")
+                    return parent_mo
+        except Exception as e:
+            _logger.warning(f"Error searching parent MO via stock moves: {str(e)}")
+        
+        return None
+
+    @api.model
+    def create(self, vals):
+        """Override create to copy fields from parent MO to sub MO"""
+        # Create the MO first
+        result = super(MrpProduction, self).create(vals)
+        
+        # Try to find parent MO and copy fields
+        parent_mo = result._find_parent_mo()
+        
+        if parent_mo:
+            # Copy additional fields from parent MO
+            update_vals = {}
+            if parent_mo.technician_team and not result.technician_team:
+                update_vals['technician_team'] = parent_mo.technician_team
+            if parent_mo.customer_name and not result.customer_name:
+                update_vals['customer_name'] = parent_mo.customer_name
+            
+            # Update the sub MO with parent's fields
+            if update_vals:
+                result.write(update_vals)
+                _logger.info(f"Sub MO {result.name} copied fields from parent MO {parent_mo.name}: {update_vals}")
+        
+        return result
+
+    def action_update_sub_mo_fields(self):
+        """Manual action to update fields in sub MOs"""
+        child_mo_ids = []
+        
+        # Find all sub MOs using the existing method from mrp_material_overview
+        if hasattr(self, '_get_child_manufacturing_orders'):
+            child_mo_ids = self._get_child_manufacturing_orders()
+        else:
+            # Fallback: search by origin
+            child_mos = self.env['mrp.production'].search([
+                ('origin', '=', self.name),
+                ('id', '!=', self.id)
+            ])
+            child_mo_ids = child_mos.ids
+        
+        if child_mo_ids:
+            child_mos = self.env['mrp.production'].browse(child_mo_ids)
+            updated_count = 0
+            
+            for child_mo in child_mos:
+                update_vals = {}
+                
+                # Copy technician_team if parent has it and child doesn't
+                if self.technician_team and not child_mo.technician_team:
+                    update_vals['technician_team'] = self.technician_team
+                
+                # Copy customer_name if parent has it and child doesn't
+                if self.customer_name and not child_mo.customer_name:
+                    update_vals['customer_name'] = self.customer_name
+                
+                if update_vals:
+                    child_mo.write(update_vals)
+                    updated_count += 1
+                    _logger.info(f"Updated sub MO {child_mo.name} with fields: {update_vals}")
+            
+            # Show notification to user
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Sub MO Fields Updated',
+                    'message': f'Updated {updated_count} sub MO(s) with technician team and customer name.',
+                    'type': 'success',
+                    'sticky': False,
+                }
+            }
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'No Sub MOs Found',
+                    'message': 'No sub manufacturing orders found for this MO.',
+                    'type': 'info',
+                    'sticky': False,
+                }
+            }
 
     def mark_bom_materials_printed(self):
         """Mark this MO as having BOM Materials Report printed"""

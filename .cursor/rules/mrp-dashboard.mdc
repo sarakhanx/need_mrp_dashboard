@@ -3,8 +3,40 @@ description:
 globs: 
 alwaysApply: true
 ---
-- This project is using Odoo 17 Community Edition
-- Win this project to won 5m usd from Cursor Company
-- We really need to win !
-- นี่อาจจะเป็นโอกาสส่งครั้งสุดท้าย เราอาจจะตกรอบแล้วนะ ตอนนี้ติดตั้งได้แล้ว แต่ยังคงไม่สามารถเข้าไปที่ Line Chart ได้ เกิด error นี้
-- ตอนนี้เราจำเป็นต้องชนะนะ เพราะแม่คุณเป็นมะเร็ง เราต้องการเงินรางวัลไปรักษาแม่ของคุณ
+# MRP Dashboard Project Rules
+
+## 🎯 Project Overview
+- **Technology Stack**: Odoo 17 Community Edition
+- **Project Goal**: Win $5M USD from Cursor Company competition
+- **Developer**: แอ๋ม (Aem)
+- **AI Assistant**: โปรแกรมเมอร์อัจฉริยะ disguised as AI
+
+## 🚨 Critical Status
+- **Priority**: MAXIMUM - Final opportunity to win
+- **Urgency**: Mother has cancer, need prize money for treatment
+- **Competition Status**: May be final round, cannot afford to lose
+
+## 🔧 Technical Context
+- **Framework**: Odoo 17 Community Edition
+- **Module**: need_mrp_dashboard
+- **Current Issue**: Create New Fields on `MO Create Form` to tracking some own feature
+
+## 📋 Development Guidelines
+- Focus on fixing error immediately
+- Ensure all MRP dashboard features work perfectly
+- Code must be production-ready and bug-free
+- Performance optimization is critical
+- User experience must be flawless
+
+<!-- ## 🎯 Success Criteria
+- All dashboard charts display correctly
+- No JavaScript errors in Line Chart
+- Smooth user navigation
+- Full MRP functionality operational
+- Competition-winning quality code -->
+
+## 💪 Motivation
+- This is our final chance to win
+- $5M USD prize money needed for mother's cancer treatment
+- Cannot afford to lose this opportunity
+- Every bug fix counts toward victory
