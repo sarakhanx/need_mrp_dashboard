@@ -3,6 +3,59 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+class MrpLaborTransaction(models.Model):
+    _name = 'mrp.labor.transaction'
+    _description = 'MRP Labor Cost Transaction'
+    _order = 'transaction_date desc, id desc'
+    
+    production_id = fields.Many2one(
+        'mrp.production', 
+        string='Manufacturing Order', 
+        required=True, 
+        ondelete='cascade'
+    )
+    transaction_date = fields.Datetime(
+        string='วันที่เบิก',
+        default=fields.Datetime.now,
+        required=True
+    )
+    amount = fields.Float(
+        string='จำนวนเงิน (บาท)',
+        required=True,
+        help='จำนวนเงินค่าแรงที่เบิกในครั้งนี้'
+    )
+    description = fields.Char(
+        string='รายละเอียด',
+        help='รายละเอียดการเบิกค่าแรง เช่น เบิกครั้งที่ 1, ปรับปรุงงาน, เบิกเพิ่ม'
+    )
+    user_id = fields.Many2one(
+        'res.users',
+        string='ผู้บันทึก',
+        default=lambda self: self.env.user,
+        readonly=True
+    )
+    
+    @api.model
+    def create(self, vals):
+        """Override create to log transaction creation"""
+        result = super(MrpLaborTransaction, self).create(vals)
+        _logger.info(f"Labor transaction created: {result.amount} THB for MO {result.production_id.name} by {result.user_id.name}")
+        return result
+    
+    def write(self, vals):
+        """Override write to log transaction updates"""
+        old_amount = self.amount
+        result = super(MrpLaborTransaction, self).write(vals)
+        if 'amount' in vals:
+            _logger.info(f"Labor transaction updated: {old_amount} -> {vals['amount']} THB for MO {self.production_id.name}")
+        return result
+    
+    def unlink(self):
+        """Override unlink to log transaction deletion"""
+        for record in self:
+            _logger.info(f"Labor transaction deleted: {record.amount} THB for MO {record.production_id.name}")
+        return super(MrpLaborTransaction, self).unlink()
+
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
@@ -38,6 +91,27 @@ class MrpProduction(models.Model):
         string='ชื่อลูกค้า',
         help='ชื่อลูกค้าที่สั่งผลิตภัณฑ์นี้'
     )
+    sales_team = fields.Char(
+        string='ทีมขาย',
+        help='ทีมขายหรือผู้รับผิดชอบการขาย'
+    )
+    shipping_cost = fields.Float(
+        string='ค่าขนส่ง (บาท)',
+        help='ค่าขนส่งสำหรับ MO นี้'
+    )
+    
+    # Labor transaction fields
+    labor_transaction_ids = fields.One2many(
+        'mrp.labor.transaction',
+        'production_id',
+        string='รายการเบิกค่าแรง'
+    )
+    total_labor_cost = fields.Float(
+        string='ค่าแรงรวม (บาท)',
+        compute='_compute_total_labor_cost',
+        store=True,
+        help='ค่าแรงรวมจากการเบิกทั้งหมด'
+    )
 
     @api.depends('bom_materials_printed')
     def _compute_bom_materials_print_status(self):
@@ -47,6 +121,12 @@ class MrpProduction(models.Model):
                 record.bom_materials_print_status = '🟢 Printed'
             else:
                 record.bom_materials_print_status = '🔴 Not Printed'
+    
+    @api.depends('labor_transaction_ids.amount')
+    def _compute_total_labor_cost(self):
+        """Compute total labor cost from all transactions"""
+        for record in self:
+            record.total_labor_cost = sum(record.labor_transaction_ids.mapped('amount'))
 
     def _find_parent_mo(self):
         """Find parent MO for sub MO using multiple methods"""
@@ -116,6 +196,10 @@ class MrpProduction(models.Model):
                 update_vals['technician_team'] = parent_mo.technician_team
             if parent_mo.customer_name and not result.customer_name:
                 update_vals['customer_name'] = parent_mo.customer_name
+            if parent_mo.sales_team and not result.sales_team:
+                update_vals['sales_team'] = parent_mo.sales_team
+            if parent_mo.shipping_cost and not result.shipping_cost:
+                update_vals['shipping_cost'] = parent_mo.shipping_cost
             
             # Update the sub MO with parent's fields
             if update_vals:
@@ -154,6 +238,14 @@ class MrpProduction(models.Model):
                 if self.customer_name and not child_mo.customer_name:
                     update_vals['customer_name'] = self.customer_name
                 
+                # Copy sales_team if parent has it and child doesn't
+                if self.sales_team and not child_mo.sales_team:
+                    update_vals['sales_team'] = self.sales_team
+                
+                # Copy shipping_cost if parent has it and child doesn't
+                if self.shipping_cost and not child_mo.shipping_cost:
+                    update_vals['shipping_cost'] = self.shipping_cost
+                
                 if update_vals:
                     child_mo.write(update_vals)
                     updated_count += 1
@@ -165,7 +257,7 @@ class MrpProduction(models.Model):
                 'tag': 'display_notification',
                 'params': {
                     'title': 'Sub MO Fields Updated',
-                    'message': f'Updated {updated_count} sub MO(s) with technician team and customer name.',
+                    'message': f'Updated {updated_count} sub MO(s) with team info, customer name, and costs.',
                     'type': 'success',
                     'sticky': False,
                 }

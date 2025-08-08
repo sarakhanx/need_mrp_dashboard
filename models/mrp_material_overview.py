@@ -180,6 +180,12 @@ class MrpProductionMaterialOverview(models.Model):
                 'mo_cost': mo_cost,
                 'unit_cost': mo_cost / self.product_qty if self.product_qty else 0,
                 'real_cost': real_cost,
+                # เพิ่มข้อมูลใหม่
+                'customer_name': self.customer_name or '',
+                'technician_team': self.technician_team or '',
+                'sales_team': self.sales_team or '',
+                'total_labor_cost': self.total_labor_cost or 0,
+                'shipping_cost': self.shipping_cost or 0,
             }
             
             # Components data from raw moves
@@ -292,14 +298,45 @@ class MrpProductionMaterialOverview(models.Model):
                     'uom_name': 'Minutes',
                 }
             
+            # Labor transaction data
+            labor_transactions = []
+            for transaction in self.labor_transaction_ids:
+                labor_transactions.append({
+                    'id': transaction.id,
+                    'date': transaction.transaction_date,
+                    'amount': transaction.amount,
+                    'description': transaction.description or '',
+                    'user_name': transaction.user_id.name if transaction.user_id else '',
+                })
+            
+            # รวม Sub MO costs
+            child_mo_ids = self._get_child_manufacturing_orders() if hasattr(self, '_get_child_manufacturing_orders') else []
+            sub_mo_total_labor_cost = 0
+            sub_mo_total_shipping_cost = 0
+            
+            if child_mo_ids:
+                child_mos = self.env['mrp.production'].browse(child_mo_ids)
+                sub_mo_total_labor_cost = sum(child_mos.mapped('total_labor_cost'))
+                sub_mo_total_shipping_cost = sum(child_mos.mapped('shipping_cost'))
+            
             result = {
                 'summary': summary,
                 'components': components,
                 'operations': operations,
                 'byproducts': {'summary': {}, 'details': []},
+                'labor_transactions': labor_transactions,
+                'cost_summary': {
+                    'material_cost': summary['mo_cost'],
+                    'labor_cost': summary['total_labor_cost'],
+                    'shipping_cost': summary['shipping_cost'],
+                    'sub_mo_labor_cost': sub_mo_total_labor_cost,
+                    'sub_mo_shipping_cost': sub_mo_total_shipping_cost,
+                    'total_cost': summary['mo_cost'] + summary['total_labor_cost'] + summary['shipping_cost'] + sub_mo_total_labor_cost + sub_mo_total_shipping_cost,
+                },
                 'extras': {
                     'unit_mo_cost': summary['mo_cost'] / summary['quantity'] if summary['quantity'] else 0,
                     'unit_real_cost': summary['real_cost'] / summary['quantity'] if summary['quantity'] else 0,
+                    'child_mo_count': len(child_mo_ids),
                 }
             }
             
@@ -676,42 +713,9 @@ class MrpProductionMaterialOverview(models.Model):
             child_mo_ids = self._get_child_manufacturing_orders()
             
             if not child_mo_ids:
-                # ถ้าไม่มี MO ย่อย ให้ return mock data
-                mock_sub_mos = [{
-                    'id': 9999,
-                    'name': f'MOCK-{product.name[:10]}-001',
-                    'product_name': f'Mock Sub Product for {product.name}',
-                    'quantity': 5.0,
-                    'uom_name': 'Units',
-                    'state': 'progress',
-                    'formatted_state': 'In Progress',
-                    'components': [
-                        {
-                            'id': 8888,
-                            'name': f'Mock Component A for {product.name}',
-                            'product_id': 1,
-                            'quantity': 2.0,
-                            'uom_name': 'Units',
-                            'state': 'assigned',
-                            'formatted_state': 'Available',
-                            'unit_cost': 50.0,
-                            'total_cost': 100.0,
-                        },
-                        {
-                            'id': 8889,
-                            'name': f'Mock Component B for {product.name}',
-                            'product_id': 2,
-                            'quantity': 1.0,
-                            'uom_name': 'kg',
-                            'state': 'waiting',
-                            'formatted_state': 'Waiting',
-                            'unit_cost': 30.0,
-                            'total_cost': 30.0,
-                        }
-                    ],
-                    'total_cost': 130.0
-                }]
-                return mock_sub_mos
+                # ถ้าไม่มี MO ย่อย ให้ return empty list
+                _logger.info(f"No child MOs found for product {product.name} in MO {self.name}")
+                return []
             
             # หา Sub MOs ที่ produce product นี้ และอยู่ในรายการ child MOs
             sub_mos = self.env['mrp.production'].search([
@@ -727,6 +731,43 @@ class MrpProductionMaterialOverview(models.Model):
                 # ดึงข้อมูล components ของ MO ย่อย
                 sub_components = []
                 
+                _logger.info(f"Processing Sub MO {sub_mo.name} - has {len(sub_mo.move_raw_ids)} raw moves")
+                
+                # ถ้าไม่มี raw moves ให้ลองดึงจาก BOM
+                if not sub_mo.move_raw_ids and sub_mo.bom_id:
+                    _logger.info(f"Sub MO {sub_mo.name} has no raw moves, trying BOM with {len(sub_mo.bom_id.bom_line_ids)} lines")
+                    for bom_line in sub_mo.bom_id.bom_line_ids[:10]:
+                        try:
+                            sub_product = bom_line.product_id
+                            sub_unit_cost = getattr(sub_product, 'standard_price', 0) or 0
+                            quantity_needed = bom_line.product_qty * sub_mo.product_qty
+                            sub_total_cost = quantity_needed * sub_unit_cost
+                            
+                            # สร้าง display name แบบ [REF] Product Name สำหรับ Sub MO component
+                            sub_internal_ref = getattr(sub_product, 'default_code', '') or ''
+                            if sub_internal_ref:
+                                sub_display_name = f"[{sub_internal_ref}] {sub_product.name}"
+                            else:
+                                sub_display_name = sub_product.name
+                            
+                            sub_component = {
+                                'id': f"bom_{bom_line.id}",
+                                'name': sub_display_name,
+                                'product_id': sub_product.id,
+                                'quantity': quantity_needed,
+                                'uom_name': bom_line.product_uom_id.name,
+                                'state': 'draft',
+                                'formatted_state': 'From BOM',
+                                'unit_cost': sub_unit_cost,
+                                'total_cost': sub_total_cost,
+                            }
+                            sub_components.append(sub_component)
+                            
+                        except Exception as e:
+                            _logger.warning(f"Error processing sub BOM line {bom_line.id}: {str(e)}")
+                            continue
+                
+                # ดึงจาก raw moves (วิธีเดิม)
                 for sub_move in sub_mo.move_raw_ids[:10]:  # จำกัดไม่เกิน 10 components
                     try:
                         sub_product = sub_move.product_id
@@ -769,6 +810,8 @@ class MrpProductionMaterialOverview(models.Model):
                     'total_cost': sub_mo._calculate_mo_cost()  # ใช้ต้นทุนจริงจาก _calculate_mo_cost()
                 }
                 result.append(sub_mo_data)
+                
+                _logger.info(f"Sub MO {sub_mo.name} added with {len(sub_components)} components")
             
             return result
             
@@ -812,15 +855,11 @@ class MrpProductionMaterialOverview(models.Model):
             # ดึงข้อมูล
             overview_data = self.get_mo_overview_data()
             
-            # Sheet 1: Components + Sub MOs
-            self._create_components_with_submo_sheet(workbook, overview_data, header_format)
+            # Sheet 1: MO Cost Summary (รวมทุกอย่าง)
+            self._create_mo_cost_summary_sheet(workbook, overview_data, header_format)
             
-            # Sheet 2: Deliveries
-            self._create_deliveries_simple_sheet(workbook, header_format)
-            
-            # Sheet 3: Operations (ถ้ามี)
-            if overview_data.get('operations', {}).get('details'):
-                self._create_operations_simple_sheet(workbook, overview_data, header_format)
+            # Sheet 2: Labor & Operations Details
+            self._create_labor_operations_sheet(workbook, overview_data, header_format)
             
             workbook.close()
             output.seek(0)
@@ -863,6 +902,222 @@ class MrpProductionMaterialOverview(models.Model):
                     'type': 'error',
                 }
             }
+
+    def _create_mo_cost_summary_sheet(self, workbook, overview_data, header_format):
+        """สร้าง Sheet 1: MO Cost Summary - รวมทุกข้อมูลสำคัญ"""
+        worksheet = workbook.add_worksheet('MO Cost Summary')
+        
+        # Set column widths
+        worksheet.set_column('A:A', 25)  # Label
+        worksheet.set_column('B:B', 20)  # Value
+        worksheet.set_column('C:C', 40)  # Description
+        
+        row = 0
+        
+        # === MO Header Information ===
+        worksheet.write(row, 0, 'MO INFORMATION', header_format)
+        worksheet.write(row, 1, '', header_format)
+        worksheet.write(row, 2, '', header_format)
+        row += 1
+        
+        mo_info = [
+            ('MO Name', overview_data['summary']['mo_name'], 'เลขที่คำสั่งผลิต'),
+            ('Product', overview_data['summary']['name'], 'ชื่อสินค้า'),
+            ('Quantity', f"{overview_data['summary']['quantity']} {overview_data['summary']['uom_name']}", 'จำนวนที่ผลิต'),
+            ('State', overview_data['summary']['formatted_state'], 'สถานะ'),
+            ('Customer', overview_data['summary']['customer_name'], 'ชื่อลูกค้า'),
+            ('Sales Team', overview_data['summary']['sales_team'], 'ทีมขาย'),
+            ('Technician Team', overview_data['summary']['technician_team'], 'ทีมช่าง'),
+        ]
+        
+        for label, value, desc in mo_info:
+            worksheet.write(row, 0, label)
+            worksheet.write(row, 1, value)
+            worksheet.write(row, 2, desc)
+            row += 1
+        
+        row += 1  # Empty row
+        
+        # === COST BREAKDOWN ===
+        worksheet.write(row, 0, 'COST BREAKDOWN', header_format)
+        worksheet.write(row, 1, 'Amount (THB)', header_format)
+        worksheet.write(row, 2, 'Description', header_format)
+        row += 1
+        
+        cost_summary = overview_data.get('cost_summary', {})
+        cost_items = [
+            ('Material Cost', cost_summary.get('material_cost', 0), 'ค่าวัสดุและ Components'),
+            ('Labor Cost (This MO)', cost_summary.get('labor_cost', 0), 'ค่าแรง MO หลัก'),
+            ('Sub MO Labor Cost', cost_summary.get('sub_mo_labor_cost', 0), 'ค่าแรง Sub MOs'),
+            ('Shipping Cost (This MO)', cost_summary.get('shipping_cost', 0), 'ค่าขนส่ง MO หลัก'),
+            ('Sub MO Shipping Cost', cost_summary.get('sub_mo_shipping_cost', 0), 'ค่าขนส่ง Sub MOs'),
+        ]
+        
+        total_cost = 0
+        for label, amount, desc in cost_items:
+            worksheet.write(row, 0, label)
+            worksheet.write(row, 1, f"{amount:,.2f}")
+            worksheet.write(row, 2, desc)
+            total_cost += amount
+            row += 1
+        
+        # Total row
+        worksheet.write(row, 0, 'TOTAL COST', header_format)
+        worksheet.write(row, 1, f"{total_cost:,.2f}", header_format)
+        worksheet.write(row, 2, 'ต้นทุนรวมทั้งหมด', header_format)
+        row += 2
+        
+        # === UNIT COSTS ===
+        quantity = overview_data['summary']['quantity'] or 1
+        worksheet.write(row, 0, 'UNIT COSTS', header_format)
+        worksheet.write(row, 1, 'Per Unit (THB)', header_format)
+        worksheet.write(row, 2, 'Description', header_format)
+        row += 1
+        
+        unit_costs = [
+            ('Unit Material Cost', cost_summary.get('material_cost', 0) / quantity, 'ต้นทุนวัสดุต่อหน่วย'),
+            ('Unit Labor Cost', (cost_summary.get('labor_cost', 0) + cost_summary.get('sub_mo_labor_cost', 0)) / quantity, 'ต้นทุนแรงงานต่อหน่วย'),
+            ('Unit Shipping Cost', (cost_summary.get('shipping_cost', 0) + cost_summary.get('sub_mo_shipping_cost', 0)) / quantity, 'ต้นทุนขนส่งต่อหน่วย'),
+            ('Unit Total Cost', total_cost / quantity, 'ต้นทุนรวมต่อหน่วย'),
+        ]
+        
+        for label, amount, desc in unit_costs:
+            worksheet.write(row, 0, label)
+            worksheet.write(row, 1, f"{amount:,.2f}")
+            worksheet.write(row, 2, desc)
+            row += 1
+        
+        row += 2
+        
+        # === LABOR TRANSACTION HISTORY ===
+        labor_transactions = overview_data.get('labor_transactions', [])
+        if labor_transactions:
+            worksheet.write(row, 0, 'LABOR TRANSACTION HISTORY', header_format)
+            worksheet.write(row, 1, '', header_format)
+            worksheet.write(row, 2, '', header_format)
+            row += 1
+            
+            # Headers for labor transactions
+            worksheet.write(row, 0, 'Date', header_format)
+            worksheet.write(row, 1, 'Amount (THB)', header_format)
+            worksheet.write(row, 2, 'Description', header_format)
+            worksheet.write(row, 3, 'By User', header_format)
+            row += 1
+            
+            for transaction in labor_transactions:
+                worksheet.write(row, 0, transaction.get('date', '').strftime('%Y-%m-%d %H:%M') if transaction.get('date') else '')
+                worksheet.write(row, 1, f"{transaction.get('amount', 0):,.2f}")
+                worksheet.write(row, 2, transaction.get('description', ''))
+                worksheet.write(row, 3, transaction.get('user_name', ''))
+                row += 1
+            
+            # Labor total
+            labor_total = sum(t.get('amount', 0) for t in labor_transactions)
+            worksheet.write(row, 0, 'LABOR TOTAL', header_format)
+            worksheet.write(row, 1, f"{labor_total:,.2f}", header_format)
+            worksheet.write(row, 2, 'รวมค่าแรงทั้งหมด', header_format)
+
+    def _create_labor_operations_sheet(self, workbook, overview_data, header_format):
+        """สร้าง Sheet 2: Labor & Operations Details"""
+        worksheet = workbook.add_worksheet('Labor & Operations')
+        
+        # Set column widths
+        worksheet.set_column('A:A', 30)  # Operation/Component Name
+        worksheet.set_column('B:B', 20)  # Workcenter/Details
+        worksheet.set_column('C:C', 15)  # Duration/Quantity
+        worksheet.set_column('D:D', 15)  # Unit Cost
+        worksheet.set_column('E:E', 15)  # Total Cost
+        worksheet.set_column('F:F', 15)  # State
+        worksheet.set_column('G:G', 40)  # Description
+        
+        row = 0
+        
+        # === WORK ORDERS ===
+        operations = overview_data.get('operations', {}).get('details', [])
+        if operations:
+            worksheet.write(row, 0, 'WORK ORDERS', header_format)
+            worksheet.write(row, 1, 'Workcenter', header_format)
+            worksheet.write(row, 2, 'Duration (min)', header_format)
+            worksheet.write(row, 3, 'Cost/Min (THB)', header_format)
+            worksheet.write(row, 4, 'Total Cost (THB)', header_format)
+            worksheet.write(row, 5, 'State', header_format)
+            worksheet.write(row, 6, 'Description', header_format)
+            row += 1
+            
+            for operation in operations:
+                duration = operation.get('duration_expected', 0)
+                cost_per_min = 10  # Assuming 10 THB/min
+                total_cost = duration * cost_per_min
+                
+                worksheet.write(row, 0, operation.get('name', ''))
+                worksheet.write(row, 1, operation.get('workcenter', ''))
+                worksheet.write(row, 2, duration)
+                worksheet.write(row, 3, f"{cost_per_min:,.2f}")
+                worksheet.write(row, 4, f"{total_cost:,.2f}")
+                worksheet.write(row, 5, operation.get('state', ''))
+                worksheet.write(row, 6, 'Work Order Operation')
+                row += 1
+        
+        row += 2
+        
+        # === COMPONENTS ===
+        components = overview_data.get('components', [])
+        if components:
+            worksheet.write(row, 0, 'COMPONENTS', header_format)
+            worksheet.write(row, 1, 'Product Code', header_format)
+            worksheet.write(row, 2, 'Quantity', header_format)
+            worksheet.write(row, 3, 'Unit Cost (THB)', header_format)
+            worksheet.write(row, 4, 'Total Cost (THB)', header_format)
+            worksheet.write(row, 5, 'State', header_format)
+            worksheet.write(row, 6, 'Description', header_format)
+            row += 1
+            
+            for component in components:
+                summary = component.get('summary', {})
+                quantity = summary.get('quantity', 0)
+                total_cost = summary.get('mo_cost', 0)
+                unit_cost = total_cost / quantity if quantity > 0 else 0
+                
+                worksheet.write(row, 0, summary.get('name', ''))
+                worksheet.write(row, 1, summary.get('product_id', ''))
+                worksheet.write(row, 2, f"{quantity} {summary.get('uom_name', '')}")
+                worksheet.write(row, 3, f"{unit_cost:,.2f}")
+                worksheet.write(row, 4, f"{total_cost:,.2f}")
+                worksheet.write(row, 5, summary.get('formatted_state', ''))
+                worksheet.write(row, 6, summary.get('description', ''))
+                row += 1
+                
+                # Sub MOs for this component
+                sub_mos = component.get('sub_mos', [])
+                for sub_mo in sub_mos:
+                    sub_mo_quantity = sub_mo.get('quantity', 0)
+                    sub_mo_total_cost = sub_mo.get('total_cost', 0)
+                    sub_mo_unit_cost = sub_mo_total_cost / sub_mo_quantity if sub_mo_quantity > 0 else 0
+                    
+                    worksheet.write(row, 0, f"  └─ Sub MO: {sub_mo.get('name', '')}")
+                    worksheet.write(row, 1, sub_mo.get('product_name', ''))
+                    worksheet.write(row, 2, f"{sub_mo_quantity} {sub_mo.get('uom_name', '')}")
+                    worksheet.write(row, 3, f"{sub_mo_unit_cost:,.2f}")
+                    worksheet.write(row, 4, f"{sub_mo_total_cost:,.2f}")
+                    worksheet.write(row, 5, sub_mo.get('formatted_state', ''))
+                    worksheet.write(row, 6, 'Sub Manufacturing Order')
+                    row += 1
+                    
+                    # แสดง Components ของ Sub MO
+                    sub_components = sub_mo.get('components', [])
+                    for sub_comp in sub_components:
+                        sub_comp_quantity = sub_comp.get('quantity', 0)
+                        sub_comp_total_cost = sub_comp.get('total_cost', 0)
+                        sub_comp_unit_cost = sub_comp_total_cost / sub_comp_quantity if sub_comp_quantity > 0 else 0
+                        
+                        worksheet.write(row, 0, f"      ├─ {sub_comp.get('name', '')}")
+                        worksheet.write(row, 1, f"Sub Component")
+                        worksheet.write(row, 2, f"{sub_comp_quantity} {sub_comp.get('uom_name', '')}")
+                        worksheet.write(row, 3, f"{sub_comp_unit_cost:,.2f}")
+                        worksheet.write(row, 4, f"{sub_comp_total_cost:,.2f}")
+                        worksheet.write(row, 5, sub_comp.get('formatted_state', ''))
+                        worksheet.write(row, 6, f"Component of {sub_mo.get('name', '')}")
+                        row += 1
 
     def _create_components_with_submo_sheet(self, workbook, overview_data, header_format):
         """สร้าง Components + Sub MOs Sheet"""

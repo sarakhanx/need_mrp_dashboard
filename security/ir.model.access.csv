@@ -7,3 +7,5 @@ access_mrp_workorder_dashboard_user,mrp.workorder.dashboard.user,model_mrp_worko
 access_mrp_workorder_dashboard_manager,mrp.workorder.dashboard.manager,model_mrp_workorder_dashboard,mrp.group_mrp_manager,1,1,1,1
 access_custom_mo_dashboard_user,custom.mo.dashboard.user,model_custom_mo_dashboard,mrp.group_mrp_user,1,1,1,1
 access_custom_mo_dashboard_manager,custom.mo.dashboard.manager,model_custom_mo_dashboard,mrp.group_mrp_manager,1,1,1,1
+access_mrp_labor_transaction_user,mrp.labor.transaction.user,model_mrp_labor_transaction,mrp.group_mrp_user,1,0,0,0
+access_mrp_labor_transaction_manager,mrp.labor.transaction.manager,model_mrp_labor_transaction,mrp.group_mrp_manager,1,1,1,1

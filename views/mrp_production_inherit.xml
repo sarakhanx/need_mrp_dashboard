@@ -83,7 +83,38 @@
                 <group string="ข้อมูลเพิ่มเติม" name="additional_info" colspan="2">
                     <field name="technician_team" placeholder="ระบุทีมช่างผู้รับผิดชอบ"/>
                     <field name="customer_name" placeholder="ระบุชื่อลูกค้า"/>
+                    <field name="sales_team" placeholder="ระบุทีมขายผู้รับผิดชอบ"/>
                 </group>
+            </xpath>
+            
+            <!-- Add Labor & Costs Tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Labor &amp; Costs" name="labor_costs">
+                    <group>
+                        <group string="Cost Information">
+                            <field name="total_labor_cost" readonly="1" widget="monetary"/>
+                            <field name="shipping_cost" widget="monetary"/>
+                        </group>
+                    </group>
+                    
+                    <separator string="Labor Transactions" colspan="2"/>
+                    <field name="labor_transaction_ids" nolabel="1" colspan="2">
+                        <tree editable="bottom">
+                            <field name="transaction_date" widget="datetime"/>
+                            <field name="amount" widget="monetary" sum="Total"/>
+                            <field name="description"/>
+                            <field name="user_id" readonly="1"/>
+                        </tree>
+                        <form>
+                            <group>
+                                <field name="transaction_date" widget="datetime"/>
+                                <field name="amount" widget="monetary"/>
+                                <field name="description"/>
+                                <field name="user_id" readonly="1"/>
+                            </group>
+                        </form>
+                    </field>
+                </page>
             </xpath>
         </field>
     </record>
